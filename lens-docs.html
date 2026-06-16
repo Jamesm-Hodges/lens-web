@@ -150,6 +150,10 @@
       <div class="sidebar-link" onclick="showSection('pleasebro', this)">PleaseBro Detection</div>
       <div class="sidebar-link" onclick="showSection('ca-history', this)">CA History</div>
       <div class="sidebar-link" onclick="showSection('cabal-wallet', this)">Bundled Wallets</div>
+      <div class="sidebar-link" onclick="showSection('ai-verdict', this)">AI Verdict <span class="new-badge">NEW</span></div>
+      <div class="sidebar-link" onclick="showSection('token-health', this)">Token Health <span class="new-badge">NEW</span></div>
+      <div class="sidebar-link" onclick="showSection('linked-accounts', this)">Linked Accounts <span class="new-badge">NEW</span></div>
+      <div class="sidebar-link" onclick="showSection('funding-trail', this)">Funding Trail <span class="new-badge">NEW</span></div>
       <div class="sidebar-link" onclick="showSection('smart-follower', this)">Smart Follower <span class="soon-badge">SOON</span></div>
       <div class="sidebar-link" onclick="showSection('github-intel', this)">GitHub Intel <span class="soon-badge">SOON</span></div>
       <div class="sidebar-link" onclick="showSection('username-history', this)">Username History <span class="soon-badge">SOON</span></div>
@@ -199,6 +203,26 @@
           <div class="title">CA History</div>
           <div class="desc">Every CA ever posted in their bio including deleted ones with peak mcap.</div>
           <span class="tag">BIO INTEL</span>
+        </div>
+        <div class="doc-feature-card" onclick="showSection('ai-verdict', document.querySelector('[onclick*=ai-verdict]'))">
+          <div class="title">AI Verdict</div>
+          <div class="desc">An AI reads every LENS signal and returns a one-line risk call: LOW, MEDIUM or HIGH.</div>
+          <span class="tag">AI</span>
+        </div>
+        <div class="doc-feature-card" onclick="showSection('token-health', document.querySelector('[onclick*=token-health]'))">
+          <div class="title">Token Health</div>
+          <div class="desc">How much of the token supply the dev still holds, read live on-chain. High = dump risk.</div>
+          <span class="tag">ON-CHAIN</span>
+        </div>
+        <div class="doc-feature-card" onclick="showSection('linked-accounts', document.querySelector('[onclick*=linked-accounts]'))">
+          <div class="title">Linked Accounts</div>
+          <div class="desc">Other X profiles that share a wallet with this one, surfacing possible alts and sockpuppets.</div>
+          <span class="tag">NETWORK</span>
+        </div>
+        <div class="doc-feature-card" onclick="showSection('funding-trail', document.querySelector('[onclick*=funding-trail]'))">
+          <div class="title">Funding Trail</div>
+          <div class="desc">Who funded the deployer, and which other wallets that same funder seeded. Catches serial devs.</div>
+          <span class="tag">SERIAL DEV</span>
         </div>
       </div>
       <div class="page-nav"><div></div><a class="page-nav-btn next" onclick="showSection('install', document.querySelector('[onclick*=install]'))"><span class="nav-label">Next</span><span class="nav-title">Installation &rarr;</span></a></div>
@@ -328,7 +352,77 @@
         <tr><td>Coordination Signals</td><td>Buys or sells that move in sync across the cluster</td></tr>
       </tbody></table>
       <div class="doc-box tip"><span class="doc-box-icon">+</span><span>Bundled Wallets helps surface insiders, coordinated pumps, and hidden teams before you trust a single profile.</span></div>
-      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('ca-history', document.querySelector('[onclick*=ca-history]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; CA History</span></a><a class="page-nav-btn next" onclick="showSection('smart-follower', document.querySelector('[onclick*=smart-follower]'))"><span class="nav-label">Next</span><span class="nav-title">Smart Follower &rarr;</span></a></div>
+      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('ca-history', document.querySelector('[onclick*=ca-history]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; CA History</span></a><a class="page-nav-btn next" onclick="showSection('ai-verdict', document.querySelector('[onclick*=ai-verdict]'))"><span class="nav-label">Next</span><span class="nav-title">AI Verdict &rarr;</span></a></div>
+    </div>
+
+    <!-- AI VERDICT -->
+    <div class="doc-section" id="sec-ai-verdict">
+      <div class="breadcrumb"><span>Docs</span><span class="sep">/</span><span class="current">AI Verdict</span></div>
+      <h1 class="page-title">AI Verdict</h1>
+      <p class="page-desc">An AI reads every signal LENS gathered on a profile and returns a single plain-language risk call, so you get a verdict without parsing the raw data yourself.</p>
+      <h2 class="doc-h2">How it works</h2>
+      <p class="doc-p">Once the on-chain and trust data finishes loading, LENS bundles every signal on the panel including the trust score, fee claims, dev sells, supply held, account age and origin and sends it to an AI model. The model weighs the pattern and returns a verdict the same way an experienced analyst would summarize a profile in one sentence.</p>
+      <h2 class="doc-h2">What you get</h2>
+      <table class="doc-table"><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>
+        <tr><td>Risk level</td><td>LOW, MEDIUM or HIGH, color-coded at a glance</td></tr>
+        <tr><td>Verdict</td><td>One sentence explaining the call, citing the actual signals</td></tr>
+      </tbody></table>
+      <div class="doc-box info"><span class="doc-box-icon">i</span><span>The verdict is generated from the signals LENS already shows. It is a reading of the data, not financial advice always verify before you trade.</span></div>
+      <div class="doc-box tip"><span class="doc-box-icon">+</span><span>Verdicts are cached per profile for 30 minutes so the panel stays fast on repeat visits.</span></div>
+      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('cabal-wallet', document.querySelector('[onclick*=cabal-wallet]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; Bundled Wallets</span></a><a class="page-nav-btn next" onclick="showSection('token-health', document.querySelector('[onclick*=token-health]'))"><span class="nav-label">Next</span><span class="nav-title">Token Health &rarr;</span></a></div>
+    </div>
+
+    <!-- TOKEN HEALTH -->
+    <div class="doc-section" id="sec-token-health">
+      <div class="breadcrumb"><span>Docs</span><span class="sep">/</span><span class="current">Token Health</span></div>
+      <h1 class="page-title">Token Health</h1>
+      <p class="page-desc">Reads the dev's current token balance straight from the chain and shows how much of the total supply they still control the single clearest dump-risk signal.</p>
+      <h2 class="doc-h2">Why it matters</h2>
+      <p class="doc-p">If a dev still holds a large chunk of supply, they can crash the price at any moment. A dev who holds little or nothing has either distributed or already sold reducing that specific risk. Knowing this before you buy is one of the most useful checks you can run.</p>
+      <h2 class="doc-h2">How it's measured</h2>
+      <p class="doc-p">LENS calls the token contract directly on Base, dividing the deployer's live balance by the total supply. No estimates, no indexer just the current on-chain numbers.</p>
+      <table class="doc-table"><thead><tr><th>Dev holdings</th><th>Reading</th></tr></thead><tbody>
+        <tr><td>Over 20%</td><td>High dump risk flagged</td></tr>
+        <tr><td>5% to 20%</td><td>Worth watching</td></tr>
+        <tr><td>Under 5%</td><td>Low mostly distributed or sold</td></tr>
+      </tbody></table>
+      <div class="doc-box info"><span class="doc-box-icon">i</span><span>Token Health focuses on dev holdings. Full liquidity status and complete holder distribution need a dedicated indexer and are planned for a later release.</span></div>
+      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('ai-verdict', document.querySelector('[onclick*=ai-verdict]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; AI Verdict</span></a><a class="page-nav-btn next" onclick="showSection('linked-accounts', document.querySelector('[onclick*=linked-accounts]'))"><span class="nav-label">Next</span><span class="nav-title">Linked Accounts &rarr;</span></a></div>
+    </div>
+
+    <!-- LINKED ACCOUNTS -->
+    <div class="doc-section" id="sec-linked-accounts">
+      <div class="breadcrumb"><span>Docs</span><span class="sep">/</span><span class="current">Linked Accounts</span></div>
+      <h1 class="page-title">Linked Accounts</h1>
+      <p class="page-desc">Surfaces other X profiles that share a wallet with the one you're viewing exposing possible alt accounts and sockpuppets behind a single operator.</p>
+      <h2 class="doc-h2">Why it matters</h2>
+      <p class="doc-p">One person often runs several accounts to manufacture hype or recycle a failed token under a new name. When two profiles point to the same wallet, that is a strong hint they are run by the same hand.</p>
+      <h2 class="doc-h2">How it works</h2>
+      <p class="doc-p">As LENS scans profiles, it archives the wallets each one references. When you open a profile, it checks whether any archived account shares a wallet and lists the matches.</p>
+      <table class="doc-table"><thead><tr><th>Result</th><th>Meaning</th></tr></thead><tbody>
+        <tr><td>2 to 11 accounts</td><td>Tight cluster flagged as possible alts</td></tr>
+        <tr><td>12 or more</td><td>Likely a popular shared token, not flagged</td></tr>
+        <tr><td>None yet</td><td>No archived account shares a wallet so far</td></tr>
+      </tbody></table>
+      <div class="doc-box tip"><span class="doc-box-icon">+</span><span>Coverage grows as more profiles are scanned. The bigger the LENS archive gets, the sharper this signal becomes.</span></div>
+      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('token-health', document.querySelector('[onclick*=token-health]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; Token Health</span></a><a class="page-nav-btn next" onclick="showSection('funding-trail', document.querySelector('[onclick*=funding-trail]'))"><span class="nav-label">Next</span><span class="nav-title">Funding Trail &rarr;</span></a></div>
+    </div>
+
+    <!-- FUNDING TRAIL -->
+    <div class="doc-section" id="sec-funding-trail">
+      <div class="breadcrumb"><span>Docs</span><span class="sep">/</span><span class="current">Funding Trail</span></div>
+      <h1 class="page-title">Funding Trail</h1>
+      <p class="page-desc">Traces who funded the deployer's wallet, then finds the other wallets that same funder seeded a fast way to catch a serial dev running many wallets from one source.</p>
+      <h2 class="doc-h2">Why it matters</h2>
+      <p class="doc-p">Serial ruggers rarely use one wallet. They fund a fresh deployer for each launch from a single source wallet. Following the money back to that source and out to its other recipients can reveal a whole family of related launches.</p>
+      <h2 class="doc-h2">How to read it</h2>
+      <table class="doc-table"><thead><tr><th>Result</th><th>Meaning</th></tr></thead><tbody>
+        <tr><td>2 to 29 siblings</td><td>Shared funder flagged as a possible multi-wallet operator</td></tr>
+        <tr><td>30 or more</td><td>Funder behaves like an exchange or bridge low signal</td></tr>
+        <tr><td>No siblings</td><td>The funder seeded only this wallet clean</td></tr>
+      </tbody></table>
+      <div class="doc-box info"><span class="doc-box-icon">i</span><span>When a sibling wallet matches a profile in the LENS archive, it is labelled with that handle so you can jump straight to the linked account.</span></div>
+      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('linked-accounts', document.querySelector('[onclick*=linked-accounts]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; Linked Accounts</span></a><a class="page-nav-btn next" onclick="showSection('smart-follower', document.querySelector('[onclick*=smart-follower]'))"><span class="nav-label">Next</span><span class="nav-title">Smart Follower &rarr;</span></a></div>
     </div>
 
     <!-- SMART FOLLOWER -->
@@ -340,7 +434,7 @@
       <h2 class="doc-h2">Why it matters</h2>
       <p class="doc-p">Follower counts are easy to fake. What is far harder to fake is who follows a profile. When real builders, known traders, and respected KOLs follow an account, that is a strong signal of genuine traction.</p>
       <p class="doc-p">Smart Follower cross-references a profile's followers against a curated set of high-signal on-chain accounts and surfaces the notable ones, so you can instantly separate a real audience from bots and bought engagement.</p>
-      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('cabal-wallet', document.querySelector('[onclick*=cabal-wallet]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; Bundled Wallets</span></a><a class="page-nav-btn next" onclick="showSection('github-intel', document.querySelector('[onclick*=github-intel]'))"><span class="nav-label">Next</span><span class="nav-title">GitHub Intel &rarr;</span></a></div>
+      <div class="page-nav"><a class="page-nav-btn" onclick="showSection('funding-trail', document.querySelector('[onclick*=funding-trail]'))"><span class="nav-label">Previous</span><span class="nav-title">&larr; Funding Trail</span></a><a class="page-nav-btn next" onclick="showSection('github-intel', document.querySelector('[onclick*=github-intel]'))"><span class="nav-label">Next</span><span class="nav-title">GitHub Intel &rarr;</span></a></div>
     </div>
 
     <!-- GITHUB INTEL -->
@@ -489,6 +583,15 @@
       <div class="breadcrumb"><span>Docs</span><span class="sep">/</span><span class="current">Changelog</span></div>
       <h1 class="page-title">Changelog</h1>
       <p class="page-desc">Release history and updates for LENS.</p>
+      <h2 class="doc-h2">v2.5 June 2026</h2>
+      <div class="doc-box tip"><span class="doc-box-icon">+</span><span>Five new intelligence features added.</span></div>
+      <ul style="margin-left:20px;margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+        <li style="font-size:13px;color:var(--text2);">AI Verdict one-line risk call read from every LENS signal</li>
+        <li style="font-size:13px;color:var(--text2);">Token Health dev's live percentage of supply (dump risk)</li>
+        <li style="font-size:13px;color:var(--text2);">Linked Accounts other X profiles sharing the same wallet</li>
+        <li style="font-size:13px;color:var(--text2);">Funding Trail funder tracing for serial-dev detection</li>
+        <li style="font-size:13px;color:var(--text2);">Origin Check account location and VPN/geo signal, auto-run</li>
+      </ul>
       <h2 class="doc-h2">v1.0.0 June 2026</h2>
       <div class="doc-box tip"><span class="doc-box-icon">+</span><span>Initial public release.</span></div>
       <p class="doc-p">First public release of LENS Chrome Extension.</p>
