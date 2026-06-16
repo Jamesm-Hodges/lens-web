@@ -144,9 +144,9 @@
   body.light .preview-body { background: #e8e8ea; }
   body.light .preview-topbar { background: #e0e0e2; }
   body.light .preview-url { background: #f4f4f5; color: #888; border-color: #ccc; }
-  body.light .feat { background: #fff; }
-  body.light .feat:hover { background: #f4f4f5; }
-  body.light .features-grid { background: #e0e0e2; border-color: #e0e0e2; }
+  body.light .feat { background: #fff; border-color: rgba(0,0,0,0.08); box-shadow: 0 4px 18px rgba(0,0,0,0.06); }
+  body.light .feat:hover { background: #fff; border-color: rgba(0,0,0,0.14); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+  body.light .features-grid { background: transparent; border: none; }
   body.light .cta-inner { background: #fff; border-color: #e0e0e2; }
   body.light .step-circle { background: #f4f4f5; border-color: #ddd; }
   body.light #heroCanvas { opacity: 0.3; }
@@ -560,11 +560,7 @@
   .features-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
+    gap: 16px;
     margin-top: 52px;
   }
   .feat.soon { position: relative; }
@@ -573,18 +569,28 @@
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
     color: #e0843a; background: rgba(224,132,58,0.12);
-    border: 1px solid rgba(224,132,58,0.35); border-radius: 6px;
-    padding: 3px 9px; text-transform: uppercase;
+    border: 1px solid rgba(224,132,58,0.35); border-radius: 999px;
+    padding: 4px 11px; text-transform: uppercase;
   }
   .feat-soon-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #e0843a; }
 
   .feat {
-    background: var(--bg);
-    padding: 34px 30px;
-    transition: background 0.2s;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px;
+    padding: 30px 28px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 30px rgba(0,0,0,0.28);
+    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
-  .feat:hover { background: var(--bg3); }
+  .feat:hover {
+    transform: translateY(-3px);
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 14px 40px rgba(0,0,0,0.42);
+  }
 
   .feat-num {
     font-family: 'JetBrains Mono', monospace;
@@ -617,8 +623,8 @@
     color: var(--accent-light);
     background: rgba(41,82,227,0.07);
     border: 1px solid rgba(41,82,227,0.15);
-    padding: 3px 8px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 999px;
     letter-spacing: 1.5px;
     font-family: 'JetBrains Mono', monospace;
   }
@@ -1351,7 +1357,7 @@
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
 
-  <h1 class="hero-title">See through<br>every <span class="blue" id="cycleText">wallet.</span></h1>
+  <h1 class="hero-title">See through<br>every <span class="blue" id="cycleText">wallet</span></h1>
 
   <p class="hero-sub">On-chain intelligence injected directly into Twitter/X profiles. Dev fees, deploy history, wallet labels all in one click.</p>
 
@@ -1414,11 +1420,10 @@
       <p class="feat-desc">Every handle they've ever worn on X, kept on record. A scammer can rebrand all they want, you'll still know exactly who they are.</p>
       <span class="feat-soon-badge">Coming Soon</span>
     </div>
-    <div class="feat soon">
+    <div class="feat">
       <div class="feat-num">07</div>
-      <div class="feat-title">Cabal Wallet</div>
-      <p class="feat-desc">Maps the wallets moving in sync behind a single dev and surfaces the whole cluster. You see the real group running the play, not just the face out front.</p>
-      <span class="feat-soon-badge">Coming Soon</span>
+      <div class="feat-title">Bundled Wallets</div>
+      <p class="feat-desc">Traces who funded the early buyers and groups the wallets bundled behind a single dev into one cluster. You see the real crew running the play, not just the face out front.</p>
     </div>
     <div class="feat soon">
       <div class="feat-num">08</div>
@@ -1434,7 +1439,7 @@
 <!-- HOW IT WORKS -->
 <section class="section" id="how">
   <div class="eyebrow">How it works</div>
-  <h2 class="section-title">Three steps.<br>Full intelligence.</h2>
+  <h2 class="section-title">Three steps<br>Full intelligence</h2>
 
   <div class="steps">
     <div class="step">
@@ -1475,7 +1480,7 @@
 <!-- PREVIEW -->
 <section class="section">
   <div class="eyebrow">Preview</div>
-  <h2 class="section-title">See it in action.</h2>
+  <h2 class="section-title">See it in action</h2>
   <p class="section-body">Exactly what you will see injected under every X profile when LENS is active.</p>
 
   <div class="preview-shell">
@@ -1528,7 +1533,7 @@
 <!-- DOWNLOAD -->
 <div class="download-section" id="download">
   <div class="eyebrow">Download</div>
-  <h2 class="section-title">Install LENS.<br>Start seeing everything.</h2>
+  <h2 class="section-title">Install LENS<br>Start seeing everything</h2>
   <p class="section-body" style="margin-bottom:40px;">Available as a browser extension. Pick your browser and install in seconds.</p>
 
   <!-- Browser Tabs -->
@@ -1649,7 +1654,7 @@
 <div class="cta-wrap">
   <div class="cta-inner">
     <div class="eyebrow" style="text-align:center;">Get started</div>
-    <h2 class="section-title">Nothing hides<br>from <span style="color:#4a72ff">LENS.</span></h2>
+    <h2 class="section-title">Nothing hides<br>from <span style="color:#4a72ff">LENS</span></h2>
     <p class="section-body" style="margin:0 auto 0;text-align:center;">Free Chrome extension. Real on-chain data. Install in 10 seconds.</p>
     <div class="cta-btns" style="margin-top:32px;">
       <a href="#" class="btn-primary-lg">
@@ -1682,7 +1687,7 @@
 
 <script>
 // ── CYCLING TEXT ──
-const words = ['wallet.', 'address.', 'dev.', 'scammer.', 'KOL.', 'rugger.', 'deployer.'];
+const words = ['wallet', 'address', 'dev', 'scammer', 'KOL', 'rugger', 'deployer'];
 let wi = 0;
 const el = document.getElementById('cycleText');
 
