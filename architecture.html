@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How LENS Works</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7' fill='%232952e3'/%3E%3Cpath d='M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z' fill='none' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='14' r='3.2' fill='none' stroke='white' stroke-width='1.8'/%3E%3Ccircle cx='14' cy='14' r='1.1' fill='white'/%3E%3C/svg%3E">
+<meta property="og:title" content="How LENS Works">
+<meta property="og:description" content="The full path from an X profile to an on-chain verdict, read from public data only">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root {
+    --bg: #0a0a0a; --bg2: #111111; --bg3: #161616;
+    --border: #1f1f1f; --border2: #2a2a2a;
+    --text: #f0f0f0; --text2: #888; --text3: #555;
+    --accent: #2952e3; --accent2: #1a3acc; --accent-light: #4a72ff;
+    --green: #2ecc71;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh; overflow-x:hidden; }
+  a { color:inherit; text-decoration:none; }
+  body::before {
+    content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(620px circle at 12% -5%, rgba(41,82,227,0.16), transparent 60%),
+      radial-gradient(520px circle at 95% 110%, rgba(74,114,255,0.10), transparent 55%);
+  }
+  nav {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px; max-width:1180px; margin:0 auto;
+    position:sticky; top:0; backdrop-filter:blur(10px); z-index:10;
+    background:rgba(10,10,10,0.6); border-bottom:1px solid var(--border);
+  }
+  .nav-logo { display:flex; align-items:center; gap:10px; }
+  .nav-logo svg { width:28px; height:28px; }
+  .nav-logo-text { font-weight:800; font-size:18px; letter-spacing:0.5px; }
+  .nav-links { display:flex; align-items:center; gap:24px; }
+  .nav-links a { color:var(--text2); font-size:14px; font-weight:500; transition:color .15s; }
+  .nav-links a:hover { color:var(--text); }
+  .btn-chrome { background:var(--accent); border:1px solid var(--accent); color:#fff; padding:9px 16px; border-radius:9px; font-size:13px; font-weight:600; transition:background .15s; }
+  .btn-chrome:hover { background:var(--accent2); }
+
+  .hero { max-width:880px; margin:0 auto; padding:70px 28px 24px; text-align:center; }
+  .eyebrow { font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--accent-light); margin-bottom:16px; }
+  .hero h1 { font-size:clamp(34px,6vw,56px); font-weight:800; line-height:1.05; letter-spacing:-1px; }
+  .hero h1 .accent { color:var(--accent-light); }
+  .hero p { color:var(--text2); font-size:17px; margin:18px auto 0; max-width:580px; line-height:1.55; }
+
+  .sec { max-width:1080px; margin:0 auto; padding:34px 28px; }
+  .sec-h { font-size:13px; font-family:'JetBrains Mono',monospace; letter-spacing:1.5px; text-transform:uppercase; color:var(--text); }
+  .sec-sub { color:var(--text2); font-size:14px; margin-top:6px; margin-bottom:22px; line-height:1.5; }
+
+  /* pipeline signature */
+  .pipe { display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; }
+  .pipe-step { flex:1 1 150px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:16px 16px 18px; border-left:2px solid var(--accent); }
+  .ps-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent-light); letter-spacing:1px; }
+  .ps-title { font-weight:700; font-size:15px; margin-top:7px; }
+  .ps-sub { color:var(--text2); font-size:12.5px; margin-top:7px; line-height:1.5; }
+  .pipe-arrow { display:flex; align-items:center; color:var(--text3); font-size:18px; flex:0 0 auto; }
+
+  /* data layer */
+  .layer-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+  .layer-card { background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:20px; transition:border-color .15s; }
+  .layer-card:hover { border-color:var(--border2); }
+  .lc-src { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent-light); }
+  .lc-title { font-weight:700; font-size:16px; margin-top:8px; }
+  .lc-desc { color:var(--text2); font-size:13.5px; line-height:1.55; margin-top:9px; }
+
+  /* signal chips */
+  .sig-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
+  .sig { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; font-size:13.5px; font-weight:500; }
+  .sig i { width:7px; height:7px; border-radius:50%; background:var(--accent-light); flex-shrink:0; }
+
+  /* verdict callout */
+  .verdict-box { background:var(--bg2); border:1px solid var(--border); border-radius:18px; padding:24px 26px; }
+  .verdict-box p { color:var(--text2); font-size:14.5px; line-height:1.6; }
+  .verdict-tiers { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .tier { font-family:'JetBrains Mono',monospace; font-size:12px; padding:8px 14px; border-radius:999px; border:1px solid var(--border2); }
+  .tier.clear { color:var(--green); border-color:rgba(46,204,113,0.4); background:rgba(46,204,113,0.08); }
+  .tier.caution { color:#e0a23a; border-color:rgba(224,162,58,0.4); background:rgba(224,162,58,0.08); }
+  .tier.stop { color:#e06a6a; border-color:rgba(224,106,106,0.4); background:rgba(224,106,106,0.08); }
+
+  /* principles */
+  .prin-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
+  .prin { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:18px 20px; }
+  .prin-h { display:flex; align-items:center; gap:10px; font-weight:700; font-size:14.5px; }
+  .prin-h .mark { color:var(--accent-light); font-family:'JetBrains Mono',monospace; }
+  .prin p { color:var(--text2); font-size:13px; line-height:1.55; margin-top:8px; }
+
+  footer { max-width:1080px; margin:40px auto 0; padding:30px 28px 50px; border-top:1px solid var(--border); color:var(--text2); font-size:13px; text-align:center; line-height:1.7; }
+  footer a { color:var(--accent-light); }
+
+  @media (max-width:600px) {
+    .nav-links { gap:14px; }
+    .nav-links a { display:none; }
+    .nav-links .btn-chrome { display:inline-block; }
+    .hero { padding:48px 22px 20px; }
+    .pipe { flex-direction:column; }
+    .pipe-arrow { justify-content:center; transform:rotate(90deg); padding:2px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } * { transition:none !important; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <svg viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="7" fill="#2952e3"/>
+      <path d="M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="14" cy="14" r="3.2" fill="none" stroke="white" stroke-width="1.8"/>
+      <circle cx="14" cy="14" r="1.1" fill="white"/>
+    </svg>
+    <span class="nav-logo-text">LENS</span>
+  </a>
+  <div class="nav-links">
+    <a href="/lens-docs">Docs</a>
+    <a href="/community">Community</a>
+    <a href="/fund">Fund</a>
+    <a href="/#download" class="btn-chrome">Add to Chrome</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">How LENS Works</div>
+  <h1>The machine under the <span class="accent">panel</span></h1>
+  <p>Every signal LENS shows is read from public data on Base and X, here is the full path from a profile to a verdict</p>
+</header>
+
+<section class="sec">
+  <h2 class="sec-h">The pipeline</h2>
+  <p class="sec-sub">One read only flow, from the profile you are looking at to the panel under it</p>
+  <div class="pipe">
+    <div class="pipe-step">
+      <div class="ps-num">01</div>
+      <div class="ps-title">Profile</div>
+      <div class="ps-sub">You open any X profile, LENS reads the public bio for wallet addresses, contract addresses, and GitHub links</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="ps-num">02</div>
+      <div class="ps-title">Resolve</div>
+      <div class="ps-sub">The handle and any addresses found are sent to the LENS backend to look up who and what they map to</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="ps-num">03</div>
+      <div class="ps-title">Data layer</div>
+      <div class="ps-sub">LENS pulls live on chain, market, and index data in parallel from several public sources</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="ps-num">04</div>
+      <div class="ps-title">Signal engine</div>
+      <div class="ps-sub">Every signal is computed from that data, the trust score, dev behaviour, token health, and the rest</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="ps-num">05</div>
+      <div class="ps-title">Verdict</div>
+      <div class="ps-sub">Signals roll up into a clear read, shown inline under the profile and inside the agent</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2 class="sec-h">Data layer</h2>
+  <p class="sec-sub">Four public sources, queried in parallel, nothing private is ever touched</p>
+  <div class="layer-grid">
+    <div class="layer-card">
+      <div class="lc-src">on chain</div>
+      <div class="lc-title">Alchemy on Base</div>
+      <div class="lc-desc">Token metadata, wallet balances, transfers, contract deploys, fee claim transactions, and the dev live token holdings behind Token Health</div>
+    </div>
+    <div class="layer-card">
+      <div class="lc-src">market</div>
+      <div class="lc-title">Dexscreener</div>
+      <div class="lc-desc">Price, liquidity, FDV, volume, buys and sells, pair age, and the socials listed on a token, the inputs to the verdict thresholds</div>
+    </div>
+    <div class="layer-card">
+      <div class="lc-src">index</div>
+      <div class="lc-title">LENS index</div>
+      <div class="lc-desc">A backend index of Bankrbot launches, fee claim history, token holders, and curated smart accounts, refreshed on a schedule</div>
+    </div>
+    <div class="layer-card">
+      <div class="lc-src">social</div>
+      <div class="lc-title">X public data</div>
+      <div class="lc-desc">The public profile, bio, and follower list, used to surface notable followers and link a handle to its on chain activity</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2 class="sec-h">Signal engine</h2>
+  <p class="sec-sub">What gets computed from the data layer, every signal traces back to a public source</p>
+  <div class="sig-grid">
+    <div class="sig"><i></i> Trust Score</div>
+    <div class="sig"><i></i> Dev Claim Fee</div>
+    <div class="sig"><i></i> Deploy Count</div>
+    <div class="sig"><i></i> PleaseBro</div>
+    <div class="sig"><i></i> CA History</div>
+    <div class="sig"><i></i> Token Health</div>
+    <div class="sig"><i></i> Linked Accounts</div>
+    <div class="sig"><i></i> Funding Trail</div>
+    <div class="sig"><i></i> Smart Follower</div>
+    <div class="sig"><i></i> AI Verdict</div>
+    <div class="sig"><i></i> Verdict and Red Lines</div>
+    <div class="sig"><i></i> Community Tags</div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2 class="sec-h">The verdict gate</h2>
+  <p class="sec-sub">Where the agent turns data into a decision</p>
+  <div class="verdict-box">
+    <p>For any token, the signals are checked against a fixed set of red lines using live data, things like thin liquidity, a brand new pair, heavy sell pressure, no presence, or a PleaseBro fee pattern. Each line either passes or triggers, and the count of triggered lines sets the verdict, so the call is consistent and explainable rather than a guess.</p>
+    <div class="verdict-tiers">
+      <span class="tier clear">CLEAR · 0 triggered</span>
+      <span class="tier caution">CAUTION · 1 to 2</span>
+      <span class="tier stop">STOP · 3 or more</span>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2 class="sec-h">What LENS will not do</h2>
+  <p class="sec-sub">The boundaries are structural, not a promise</p>
+  <div class="prin-grid">
+    <div class="prin">
+      <div class="prin-h"><span class="mark">[01]</span> read only</div>
+      <p>LENS only reads public data, it never signs, sends, or moves anything on your behalf</p>
+    </div>
+    <div class="prin">
+      <div class="prin-h"><span class="mark">[02]</span> x.com only</div>
+      <p>The extension requests access to x.com and nothing else, no other site is touched</p>
+    </div>
+    <div class="prin">
+      <div class="prin-h"><span class="mark">[03]</span> no wallet, no keys</div>
+      <p>LENS never asks for wallet access or private keys, there is no connect step to read a profile</p>
+    </div>
+    <div class="prin">
+      <div class="prin-h"><span class="mark">[04]</span> public data only</div>
+      <p>It never reads your DMs, your posts, or any private account data, only what is already public</p>
+    </div>
+    <div class="prin">
+      <div class="prin-h"><span class="mark">[05]</span> information not advice</div>
+      <p>Every signal is information to help you decide, it is not financial advice and never a guarantee</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  read from public data on Base and X · this is information not financial advice<br>
+  <a href="/">back to lnsx.io</a>
+</footer>
+
+</body>
+</html>
