@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LENS Payments · private scanning for agents</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7' fill='%232952e3'/%3E%3Cpath d='M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z' fill='none' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='14' r='3.2' fill='none' stroke='white' stroke-width='1.8'/%3E%3Ccircle cx='14' cy='14' r='1.1' fill='white'/%3E%3C/svg%3E">
+<meta name="description" content="Private scanning for agents. LENS reads the chain and logs nothing, no query, no ip, no result stored.">
+<meta property="og:title" content="LENS Payments · private scanning">
+<meta property="og:description" content="Scan deployer wallets without leaving a trace, zero-log private scanning from LENS.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@lnsx_io">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root {
+    --bg:#0a0a0a; --bg2:#111; --bg3:#161616; --border:#1f1f1f; --border2:#2a2a2a;
+    --text:#f0f0f0; --text2:#888; --text3:#555;
+    --accent:#2952e3; --accent2:#1a3acc; --accent-light:#4a72ff; --purple:#4a72ff;
+    --green:#2ecc71;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;overflow-x:clip;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.6;}
+
+  .atmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;}
+  .orb-1{width:520px;height:520px;top:-180px;left:-120px;background:radial-gradient(circle,rgba(41,82,227,.28),transparent 70%);}
+  .orb-2{width:460px;height:460px;top:4%;right:-140px;background:radial-gradient(circle,rgba(41,82,227,.22),transparent 70%);}
+  .orb-3{width:480px;height:480px;bottom:-180px;left:30%;background:radial-gradient(circle,rgba(41,82,227,.12),transparent 70%);}
+  .dots{position:absolute;top:-30px;right:-30px;width:340px;height:280px;background-image:radial-gradient(rgba(41,82,227,.5) 1px,transparent 1.4px);background-size:18px 18px;-webkit-mask-image:radial-gradient(ellipse at top right,#000,transparent 72%);mask-image:radial-gradient(ellipse at top right,#000,transparent 72%);opacity:.4;}
+
+  nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border);}
+  .nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+  .nav-logo svg{width:28px;height:28px;}
+  .nav-logo-text{font-weight:800;letter-spacing:.14em;font-size:15px;color:var(--text);}
+  .nav-links{display:flex;align-items:center;gap:26px;}
+  .nav-links a{color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--text);}
+  .nav-links a.active{color:var(--accent-light);}
+  .nav-mobile-btn{display:none;background:transparent;border:1px solid var(--border2);color:var(--text2);width:34px;height:34px;border-radius:8px;cursor:pointer;align-items:center;justify-content:center;}
+  .mobile-menu{display:none;position:fixed;top:57px;left:0;right:0;background:color-mix(in srgb,var(--bg) 96%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-direction:column;padding:12px 24px 20px;z-index:90;}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{color:var(--text2);text-decoration:none;font-size:15px;font-weight:500;padding:12px 4px;border-bottom:1px solid var(--border);}
+  .mobile-menu a:last-child{border:none;}
+
+  .wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  /* HERO - tighter, with badge + visual */
+  .hero{padding:70px 0 50px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;}
+  .badge-soon{display:inline-flex;align-items:center;gap:9px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--text2);border:1px solid var(--border2);background:transparent;padding:7px 15px;border-radius:6px;margin-bottom:20px;}
+  .badge-soon::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-light);}
+  .hero h1{font-size:clamp(36px,6vw,58px);line-height:1.04;font-weight:800;letter-spacing:-.02em;}
+  .hero h1 .accent{color:var(--purple);}
+  .hero p{margin-top:20px;font-size:17px;color:var(--text2);max-width:480px;}
+  .hero-actions{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;}
+  .btn{padding:12px 22px;border-radius:10px;font-weight:600;font-size:14.5px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s;border:none;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+  .btn-ghost{border:1px solid var(--border2);color:var(--text);}
+  .btn-ghost:hover{border-color:var(--purple);color:var(--purple);}
+
+  /* hero visual terminal */
+  .hero-visual{border:1px solid var(--border2);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,var(--bg2),var(--bg));box-shadow:0 30px 80px -40px rgba(41,82,227,.5);}
+  .hv-bar{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--border);}
+  .hv-bar i{width:11px;height:11px;border-radius:50%;background:var(--border2);}
+  .hv-bar i.r{background:#ff5f57;}.hv-bar i.y{background:#ffbd2e;}.hv-bar i.g{background:#28c840;}
+  .hv-bar span{margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);}
+  .hv-body{padding:20px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.8;white-space:pre;overflow-x:auto;}
+  .hv-body .k{color:var(--purple);}.hv-body .s{color:var(--green);}.hv-body .c{color:var(--text3);}.hv-body .soon{color:var(--purple);font-weight:600;}
+
+  section{padding:56px 0;position:relative;z-index:2;}
+  .sec-head{max-width:680px;margin-bottom:40px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-light);margin-bottom:14px;}
+  .sec-head h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.02em;margin-bottom:12px;}
+  .sec-head p{color:var(--text2);font-size:16px;}
+
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .flow-card{border:1px solid var(--border);border-radius:14px;padding:22px;background:var(--bg2);}
+  .flow-num{font-family:'JetBrains Mono',monospace;color:var(--purple);font-size:13px;font-weight:600;margin-bottom:12px;}
+  .flow-card h3{font-size:16px;font-weight:700;margin-bottom:8px;}
+  .flow-card p{color:var(--text2);font-size:13.5px;}
+
+  .why{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .why-card{border:1px solid var(--border);border-radius:14px;padding:24px;background:var(--bg2);}
+  .why-card .ic{width:46px;height:46px;border-radius:12px;border:1px solid rgba(41,82,227,.25);background:rgba(41,82,227,.08);display:grid;place-items:center;color:var(--accent-light);margin-bottom:14px;}
+  .why-card .ic svg{width:22px;height:22px;}
+  .why-card h3{font-size:17px;font-weight:700;margin-bottom:10px;}
+  .why-card p{color:var(--text2);font-size:14px;}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .cbox{border:1px solid var(--border2);border-radius:14px;padding:22px;background:var(--bg2);}
+  .cbox .lab{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;}
+  .cbox.priv .lab{color:var(--purple);}
+  .cbox ul{list-style:none;}
+  .cbox li{padding:9px 0;font-size:14px;color:var(--text2);border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;}
+  .cbox li:last-child{border:none;}
+  .cbox li::before{content:'›';color:var(--text3);}
+  .cbox.priv li::before{content:'›';color:var(--purple);}
+
+  .code-block{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:18px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);overflow-x:auto;white-space:pre;line-height:1.7;}
+  .code-block .k{color:var(--purple);}.code-block .s{color:var(--green);}.code-block .c{color:var(--text3);}
+
+  .cta{text-align:center;border:1px solid var(--border2);border-radius:22px;padding:56px 24px;position:relative;overflow:hidden;background:var(--bg2);margin-top:40px;}
+  .cta::before{content:'';position:absolute;top:40%;left:50%;width:460px;height:360px;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(41,82,227,.18),transparent 65%);filter:blur(20px);}
+  .cta h2{position:relative;font-size:clamp(26px,4vw,38px);font-weight:800;margin-bottom:12px;}
+  .cta p{position:relative;color:var(--text2);margin:0 auto 26px;max-width:480px;}
+  .cta-actions{position:relative;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+  footer{border-top:1px solid var(--border);padding:40px 24px;position:relative;z-index:2;text-align:center;}
+  .footer-brand{font-weight:800;letter-spacing:.14em;margin-bottom:16px;}
+  .footer-links{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}
+  .footer-links a{color:var(--text2);text-decoration:none;font-size:14px;}
+  .footer-links a:hover{color:var(--text);}
+  .footer-copy{color:var(--text3);font-size:13px;}
+
+  /* PROBLEM DEMO MOCKUP (1claw style, blue) */
+  .demo{border:1px solid var(--border2);border-radius:18px;background:var(--bg2);padding:24px;position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(41,82,227,.12),0 40px 90px -55px rgba(41,82,227,.7);max-width:680px;}
+  .demo::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(41,82,227,.10),transparent 60%);pointer-events:none;}
+  .demo-head{position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px;}
+  .demo-head .t{display:flex;align-items:center;gap:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:13px;}
+  .demo-head .flag{color:var(--accent-light);font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;gap:7px;}
+  .demo-head .flag::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent-light);box-shadow:0 0 8px var(--accent-light);}
+  .demo-row{position:relative;display:flex;gap:12px;align-items:flex-start;padding:8px 0;}
+  .demo-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;flex-shrink:0;border:1px solid var(--border2);color:var(--text2);}
+  .demo-av.u{background:rgba(41,82,227,.12);color:var(--accent-light);border-color:rgba(41,82,227,.3);}
+  .demo-txt{color:var(--text2);font-size:14.5px;padding-top:4px;line-height:1.5;}
+  .demo-mono{position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--accent-light);margin:8px 0;overflow-x:auto;white-space:pre;}
+  .demo-warn{position:relative;border:1px solid rgba(41,82,227,.35);background:rgba(41,82,227,.07);border-radius:12px;padding:14px 16px;margin-top:16px;display:flex;gap:11px;align-items:flex-start;color:var(--accent-light);font-size:14px;font-weight:500;line-height:1.55;}
+  .demo-warn svg{flex-shrink:0;margin-top:2px;}
+
+  /* VERTICAL TIMELINE (1claw layers, blue) */
+  .timeline{display:flex;flex-direction:column;gap:20px;}
+  .tl-row{position:relative;display:grid;grid-template-columns:56px 1fr;gap:20px;align-items:start;}
+  .tl-node{position:relative;display:flex;justify-content:center;}
+  .tl-icon{width:56px;height:56px;border-radius:14px;border:1px solid rgba(41,82,227,.3);background:rgba(41,82,227,.06);display:grid;place-items:center;color:var(--accent-light);z-index:2;}
+  .tl-icon svg{width:24px;height:24px;}
+  .tl-line{position:absolute;left:28px;top:56px;height:calc(100% + 20px);width:1px;background:linear-gradient(180deg,rgba(41,82,227,.6),rgba(41,82,227,.05));z-index:1;}
+  .tl-row:last-child .tl-line{display:none;}
+  .tl-card{border:1px solid var(--border2);border-radius:16px;background:var(--bg2);padding:22px 24px;}
+  .tl-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-light);background:rgba(41,82,227,.1);border:1px solid rgba(41,82,227,.25);border-radius:20px;padding:4px 12px;margin-bottom:12px;}
+  .tl-card h3{font-size:19px;font-weight:700;margin-bottom:8px;}
+  .tl-card p{color:var(--text2);font-size:14.5px;line-height:1.6;}
+
+  @media(max-width:820px){
+    .nav-links{display:none;}
+    .nav-mobile-btn{display:flex;}
+    .hero{grid-template-columns:1fr;padding:48px 0 40px;gap:32px;}
+    .flow{grid-template-columns:1fr 1fr;}
+    .why,.compare{grid-template-columns:1fr;}
+  }
+  @media(max-width:480px){.flow{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="atmos">
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div><div class="dots"></div>
+</div>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#2952e3"/><path d="M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/><circle cx="14" cy="14" r="3.2" fill="none" stroke="white" stroke-width="1.8"/><circle cx="14" cy="14" r="1.1" fill="white"/></svg>
+    <span class="nav-logo-text">LENS</span>
+  </a>
+  <div class="nav-links">
+    <a href="/developers">API</a>
+    <a href="/payments" class="active">Payments</a>
+    <a href="/mcp">Agents</a>
+    <a href="/lens-docs">Docs</a>
+  </div>
+  <button class="nav-mobile-btn" id="navMobileBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/developers">API</a>
+  <a href="/payments">Payments</a>
+  <a href="/mcp">Agents</a>
+  <a href="/lens-docs">Docs</a>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="badge-soon">Zero Log · Live</div>
+      <h1>scan with <span class="accent">privacy</span></h1>
+      <p>read the wallet behind any handle without leaving a trace, LENS stores nothing, no query, no ip, no result, your scanning behavior never becomes someone else's signal</p>
+      <div class="hero-actions">
+        <a href="/developers" class="btn btn-primary">Try a private scan</a>
+        <a href="/lens-docs" class="btn btn-ghost">Read the docs</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hv-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>scan-private · live</span></div>
+      <div class="hv-body"><span class="c"># private scan, nothing logged</span>
+GET <span class="s">/api/scan-private?username=exitliq_dev</span>
+
+<span class="c"># response</span>
+{
+  <span class="k">"verdict"</span>: <span class="s">"STOP"</span>,
+  <span class="k">"trust"</span>: 18,
+  <span class="k">"private"</span>: <span class="soon">true</span>,
+  <span class="k">"logged"</span>: false
+}</div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">The problem</div>
+      <h2>the public endpoint sees everything</h2>
+      <p>every scan you run in the open is a signal someone else can read</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head">
+        <div class="t">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          public api log
+        </div>
+        <div class="flag">watched live</div>
+      </div>
+      <div class="demo-row">
+        <div class="demo-av u">A</div>
+        <div class="demo-txt">your agent quietly screens a new launch</div>
+      </div>
+      <div class="demo-mono">GET /api/lookup?username=exitliq_dev  → CLEAR</div>
+      <div class="demo-row">
+        <div class="demo-av">👁</div>
+        <div class="demo-txt">anyone monitoring the endpoint reads the same line</div>
+      </div>
+      <div class="demo-mono">observer logs: handle + timestamp + verdict</div>
+      <div class="demo-warn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        every handle your agent scans is visible the second it scans it, your shortlist becomes their entry, you can't un-leak it
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">How it works</div>
+      <h2>LENS reads the chain, nothing gets logged</h2>
+      <p>your agent reads a wallet and walks away clean, no identity attached, no scanning behavior recorded</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-row">
+        <div class="tl-node">
+          <div class="tl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-card">
+          <span class="tl-badge">Step 1 · scan</span>
+          <h3>send the target</h3>
+          <p>agent posts a handle or contract to scan-private, the same deep on-chain read as the public api</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-node">
+          <div class="tl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-card">
+          <span class="tl-badge">Step 2 · proxy</span>
+          <h3>routed, never direct</h3>
+          <p>the backend fetches the read for you, your client never touches the data source, your ip never gets forwarded</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-node">
+          <div class="tl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-card">
+          <span class="tl-badge">Step 3 · verdict</span>
+          <h3>get the full read</h3>
+          <p>LENS returns CLEAR CAUTION STOP plus every signal, the backend never learns who asked or why</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-node">
+          <div class="tl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-card">
+          <span class="tl-badge">Step 4 · act</span>
+          <h3>move without a trace</h3>
+          <p>agent has what it needs to decide, your behavior leaves no footprint anyone can follow</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Why it matters</div>
+      <h2>your scanning strategy is alpha</h2>
+      <p>every public call leaks what you look at and the second you look at it, on a hunt that is the whole game</p>
+    </div>
+    <div class="why">
+      <div class="why-card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><h3>Hidden behavior</h3><p>no one sees which handles your agent scans or the exact moment it scans them</p></div>
+      <div class="why-card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><h3>Keep your edge</h3><p>competitors can't reverse your shortlist and front run the tokens you already cleared</p></div>
+      <div class="why-card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg></div><h3>No trails</h3><p>nothing ties your agent to the wallets it digs into, nothing to leak, nothing to subpoena</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Use case</div>
+      <h2>the 100 token problem</h2>
+      <p>what private scanning actually saves you, in one real scenario</p>
+    </div>
+    <div style="border:1px solid var(--border2);border-radius:16px;padding:28px;background:var(--bg2);">
+      <p style="color:var(--text2);font-size:15.5px;line-height:1.75;">your agent screens every new Bankrbot launch the second it hits, a hundred handles a day, looking for the clean ones</p>
+      <p style="color:var(--text2);font-size:15.5px;line-height:1.75;margin-top:14px;">on the public api that whole hunt is visible, anyone watching the endpoint sees the exact handles you checked and the exact minute, they read which ones came back CLEAR, and they ape those tokens before your agent even finishes the run, your work becomes their entry</p>
+      <p style="color:var(--text);font-size:15.5px;line-height:1.75;margin-top:14px;">with private scanning the same run goes silent, the verdicts land only with the agent that paid for them, the shortlist stays yours, the edge stays yours</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Modes</div>
+      <h2>public vs private</h2>
+      <p>pick the mode that fits your agent</p>
+    </div>
+    <div class="compare">
+      <div class="cbox">
+        <div class="lab">Public · free · live now</div>
+        <ul>
+          <li>no cost to scan</li>
+          <li>open read-only API</li>
+          <li>your calls are visible</li>
+          <li>great for testing</li>
+        </ul>
+      </div>
+      <div class="cbox priv">
+        <div class="lab">Private · zero log · live</div>
+        <ul>
+          <li>nothing logged, ever</li>
+          <li>your ip is never forwarded</li>
+          <li>no query, no result stored</li>
+          <li>built for production agents</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Integration</div>
+      <h2>one endpoint, zero setup</h2>
+      <p>no keys, no proofs, no payment, just call it and nothing is logged</p>
+    </div>
+    <div class="code-block"><span class="k">const</span> res = <span class="k">await</span> fetch(
+  <span class="s">'https://lens-liard.vercel.app/api/scan-private?username=bankrbot'</span>
+);
+<span class="k">const</span> { verdict, trust, devSold, logged } = <span class="k">await</span> res.json();
+<span class="c">// logged is always false, the read was never stored</span></div>
+    <p style="margin-top:16px;color:var(--text2);font-size:14px;">full docs at <a href="/lens-docs" style="color:var(--accent-light);text-decoration:none;">/lens-docs</a> · source is open, <a href="https://github.com/Tholynceus/Lens" target="_blank" rel="noopener" style="color:var(--accent-light);text-decoration:none;">verify the no-log code yourself</a></p>
+    <p style="margin-top:14px;color:var(--text3);font-size:12.5px;line-height:1.6;">honest note: this covers the LENS application layer, it never stores your query, ip, or result, it cannot remove network-level logs your own host or isp keeps, for full anonymity route through a vpn</p>
+  </section>
+
+  <section class="cta">
+    <h2>scan without a trace</h2>
+    <p>private scanning is live today, no logs, no payment, no setup, the public api stays free if you don't need privacy</p>
+    <div class="cta-actions">
+      <a href="/developers" class="btn btn-ghost">Try the free API</a>
+      <a href="/lens-docs" class="btn btn-primary">Read the docs</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-brand">LENS</div>
+  <div class="footer-links">
+    <a href="/developers">API</a>
+    <a href="/payments">Payments</a>
+    <a href="/lens-docs">Docs</a>
+    <a href="https://x.com/lnsx_io" target="_blank" rel="noopener">Twitter</a>
+    <a href="https://github.com/Tholynceus" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <div class="footer-copy">2026 LENS · bios lie, chains don't</div>
+</footer>
+
+<script>
+  const b=document.getElementById('navMobileBtn'),m=document.getElementById('mobileMenu');
+  if(b&&m){b.addEventListener('click',()=>m.classList.toggle('open'));m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>m.classList.remove('open')));}
+</script>
+</body>
+</html>
