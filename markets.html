@@ -1254,11 +1254,28 @@ document.querySelectorAll('.wallet-opt').forEach(b=>{
   b.addEventListener('click', ()=>{
     const name = b.dataset.wallet;
     if (name === 'X' || name === 'Email'){
-      walletStatus.innerHTML = name+' login needs the Privy SDK, wallet connect is live now';
+      if (typeof window.__privyLogin === 'function'){ walletStatus.innerHTML = 'opening '+name+' login ...'; window.__privyLogin(); }
+      else { walletStatus.innerHTML = name+' login is still loading, try again in a moment'; }
       return;
     }
     connectInjected(name);
   });
+});
+
+// when Privy finishes login, adopt the X handle + embedded wallet into the app
+let xHandle = null;
+window.addEventListener('privy:login', e=>{
+  const d = e.detail || {};
+  if (d.handle) xHandle = d.handle;
+  if (d.wallet && !account){ account = d.wallet; setConnectedUI(); }
+  closeWallet();
+  if (xHandle){
+    const t = document.createElement('div'); t.className = 'toast';
+    t.innerHTML = `<img class="coin-ico" src="${ico(3,'#1d9bf0','#4a72ff','X')}" alt="">
+      <div class="tx"><div class="tt">signed in with X</div><div class="tn">@${xHandle}</div></div>`;
+    toasts.appendChild(t);
+    setTimeout(()=>{ t.classList.add('leave'); setTimeout(()=>t.remove(),300); }, 5000);
+  }
 });
 
 /* ---------- deploy coin modal ---------- */
@@ -1454,6 +1471,43 @@ loadLive().then(ok=>{
     }
     return { address, txHash: res && res.txHash };
   };
+</script>
+
+<!-- Privy login (Continue with X / email). loads in the browser, App ID is public/safe -->
+<script type="module">
+  const PRIVY_APP_ID = 'cmqnknrtt00h40clf6tdz0j4j';
+  try {
+    const [React, ReactDOMClient, Privy] = await Promise.all([
+      import('https://esm.sh/react@18'),
+      import('https://esm.sh/react-dom@18/client'),
+      import('https://esm.sh/@privy-io/react-auth@2?deps=react@18,react-dom@18&target=es2020')
+    ]);
+    const { PrivyProvider, usePrivy } = Privy;
+
+    function Bridge(){
+      const { ready, authenticated, user, login, logout } = usePrivy();
+      React.useEffect(()=>{
+        window.__privyLogin = () => { try { login(); } catch(e){ console.error(e); } };
+        window.__privyLogout = () => { try { logout(); } catch(e){} };
+        if (authenticated && user){
+          const handle = (user.twitter && user.twitter.username) || null;
+          const wallet = (user.wallet && user.wallet.address) || null;
+          window.dispatchEvent(new CustomEvent('privy:login', { detail: { handle, wallet } }));
+        }
+      }, [ready, authenticated, user]);
+      return null;
+    }
+
+    const mount = document.createElement('div');
+    mount.style.display = 'none';
+    document.body.appendChild(mount);
+    ReactDOMClient.createRoot(mount).render(
+      React.createElement(PrivyProvider, {
+        appId: PRIVY_APP_ID,
+        config: { loginMethods: ['twitter', 'email'], embeddedWallets: { createOnLogin: 'users-without-wallets' } }
+      }, React.createElement(Bridge))
+    );
+  } catch(e){ console.error('privy init failed', e); }
 </script>
 </body>
 </html>
