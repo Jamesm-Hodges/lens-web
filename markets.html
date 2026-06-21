@@ -93,8 +93,8 @@
   }
   .nav-btn.launch { background: rgba(41,82,227,.14); color: var(--accent-light); border: 1px solid rgba(41,82,227,.32); }
   .nav-btn.launch:hover { background: rgba(41,82,227,.22); }
-  .nav-btn.connect { background: var(--green); color: #04130a; border: 1px solid var(--green); border-radius: 999px; font-weight: 800; padding: 8px 18px; }
-  .nav-btn.connect:hover { background: #29b765; border-color: #29b765; }
+  .nav-btn.connect { background: var(--accent); color: #fff; border: 1px solid var(--accent); border-radius: 999px; font-weight: 800; padding: 8px 18px; }
+  .nav-btn.connect:hover { background: var(--accent2); border-color: var(--accent2); }
   .nav-btn.launch svg, .nav-btn.connect svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 5px; }
   .theme-toggle { background: none; border: none; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
   .theme-toggle svg { width: 21px; height: 21px; }
@@ -293,6 +293,13 @@
   .swap-verdict.clear { color: var(--green); background: rgba(46,204,113,.08); border: 1px solid rgba(46,204,113,.24); }
   .swap-verdict.caution { color: var(--amber); background: rgba(224,132,58,.08); border: 1px solid rgba(224,132,58,.24); }
   .swap-verdict.stop { color: var(--red); background: rgba(255,90,90,.08); border: 1px solid rgba(255,90,90,.24); }
+  .chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 10px 10px 6px; margin-bottom: 14px; }
+  .chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .chart-tf { display: flex; gap: 4px; }
+  .chart-tf button { background: transparent; border: 1px solid var(--border2); color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 8px; cursor: pointer; transition: .15s; }
+  .chart-tf button.on { background: rgba(41,82,227,.16); border-color: var(--accent); color: var(--text); }
+  .chart-status { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+  #candleCanvas { width: 100%; height: 160px; display: block; }
   .swap-field { background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
   .swap-field + .swap-field { margin-top: 6px; }
   .swap-field .ft { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 8px; }
@@ -481,10 +488,10 @@
     .mb-item:active { background: var(--bg3); }
     .mb-item.active { color: var(--accent-light); }
     .mb-connect {
-      margin-left: auto; background: var(--green); color: #04130a; border: none; cursor: pointer;
+      margin-left: auto; background: var(--accent); color: #fff; border: none; cursor: pointer;
       font-family: inherit; font-size: 14px; font-weight: 800; padding: 12px 20px; border-radius: 999px;
     }
-    .mb-connect:active { background: #29b765; }
+    .mb-connect:active { background: var(--accent2); }
     body { padding-bottom: 78px; }
   }
 
@@ -639,6 +646,17 @@
       <button class="swap-x" id="swapClose">✕</button>
     </div>
     <div class="swap-verdict" id="swapVerdict"></div>
+    <div class="chart-wrap">
+      <div class="chart-head">
+        <div class="chart-tf" id="chartTf">
+          <button data-tf="5m">5m</button>
+          <button class="on" data-tf="1h">1h</button>
+          <button data-tf="1d">1d</button>
+        </div>
+        <span class="chart-status" id="chartStatus"></span>
+      </div>
+      <canvas id="candleCanvas"></canvas>
+    </div>
     <div class="bs-toggle" id="bsToggle">
       <button class="on buy" data-side="buy">Buy</button>
       <button class="sell" data-side="sell">Sell</button>
@@ -649,6 +667,7 @@
         <input id="payAmt" inputmode="decimal" placeholder="0">
         <div class="tok-sel">
           <select id="payTok"><option value="ETH">ETH</option><option value="USDC">USDC</option></select>
+          <span id="paySellTok" style="display:none;font-weight:700">SYM</span>
         </div>
       </div>
       <div class="presets" id="presets">
@@ -807,7 +826,7 @@ const CONFIG = {
   // ready coins (Bankr launches + DexScreener price + LENS verdict) from the server,
   // so the browser never hits a CORS wall. set after uploading api/markets.js:
   // 'https://lens-liard.vercel.app/api/markets' (or '/api/markets' if same domain)
-  MARKETS_API: '',
+  MARKETS_API: 'https://lens-liard.vercel.app/api/markets',
 
   // OPTION A — auto pull recent launches from your Supabase bankr_launches.
   // fill BOTH with your project url + the ANON (public) key, never the service key
@@ -901,6 +920,7 @@ async function fetchDex(addrs){
       if (!map[a] || liq > map[a]._liq){
         map[a] = {
           _liq: liq,
+          pool: p.pairAddress || null,
           name: p.baseToken.name, sym: p.baseToken.symbol,
           price: parseFloat(p.priceUsd)||0,
           mcap: p.marketCap || p.fdv || 0,
@@ -933,7 +953,7 @@ function dexToCoin(addr, src, d){
     address: addr, sym: d.sym||'?', name: d.name||d.sym||'token', src,
     verdict: 'caution', trust: null,
     price: d.price, mcap: d.mcap||0, vol24: d.vol24||0, ch24: d.ch24||0,
-    img: d.img, url: d.url, spark, born: Date.now(), live: true
+    img: d.img, url: d.url, pool: d.pool||null, spark, born: Date.now(), live: true
   };
 }
 async function loadLive(){
@@ -949,7 +969,7 @@ async function loadLive(){
           for(let i=0;i<24;i++) spark.push(Math.max(1e-12, st+step*i));
           return { address:String(x.address).toLowerCase(), sym:x.sym||x.symbol||'?', name:x.name||x.sym||'token',
             src:(String(x.src||'bankr').includes('clank')?'clanker':'bankr'), verdict:normVerdict(x.verdict), trust:(x.trust!=null?x.trust:null),
-            price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, spark, born:Date.now(), live:true };
+            price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, pool:x.pool||null, spark, born:Date.now(), live:true };
         });
         if (coins.length){ COINS=coins; DEMO=false; setDataMode(); buildTicker(); refreshStats(); refreshTopVol(); render(); return true; }
       }
@@ -1155,6 +1175,47 @@ function buildTicker(){
 
 /* ---------- new coin feed ---------- */
 const toasts = document.getElementById('toasts');
+const seenAddrs = new Set();
+function liveToast(c){
+  const i = COINS.indexOf(c); const idx = i<0 ? 0 : i;
+  const pal = palettes[idx % palettes.length];
+  const fallback = ico(idx, pal[0], pal[1], c.sym);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<img class="coin-ico" src="${c.img||fallback}" alt="" onerror="this.onerror=null;this.src='${fallback}'">
+    <div class="tx"><div class="tt">new on ${c.src} \u00b7 scanned by LENS</div>
+    <div class="tn">$${c.sym}<span class="badge ${c.verdict}">${c.verdict.toUpperCase()}</span></div></div>`;
+  toasts.appendChild(t);
+  setTimeout(()=>{ t.classList.add('leave'); setTimeout(()=>t.remove(),300); }, 5600);
+  if (state.q==='' && (state.src==='all'||state.src===c.src) && (state.verdict==='all'||state.verdict===c.verdict)){
+    const first = body.querySelector('.crow'); if (first) first.classList.add('fresh');
+  }
+}
+async function pollNew(){
+  if (DEMO || !CONFIG.MARKETS_API) return;
+  try {
+    const r = await fetch(CONFIG.MARKETS_API + '?feed=new');
+    if (!r.ok) return;
+    const j = await r.json();
+    const arr = Array.isArray(j) ? j : (j.coins || j.data || []);
+    let added = false;
+    arr.forEach(x=>{
+      const a = String(x.address||'').toLowerCase();
+      if (!a || !x.price || seenAddrs.has(a)) return;
+      seenAddrs.add(a);
+      const spark=[]; let st=(x.price/(1+((x.ch24||0)/100)))||x.price; const step=(x.price-st)/23;
+      for(let i=0;i<24;i++) spark.push(Math.max(1e-12, st+step*i));
+      const c = { address:a, sym:x.sym||x.symbol||'?', name:x.name||x.sym||'token',
+        src:(String(x.src||'bankr').includes('clank')?'clanker':'bankr'), verdict:normVerdict(x.verdict), trust:(x.trust!=null?x.trust:null),
+        price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, pool:x.pool||null, spark, born:Date.now(), live:true };
+      COINS.unshift(c);
+      liveToast(c);
+      added = true;
+    });
+    if (COINS.length > 60) COINS.length = 60;
+    if (added){ render(); refreshStats(); refreshTopVol(); buildTicker(); }
+  } catch(e){}
+}
 function newCoin(){
   if (PENDING.length===0) return;
   const idx = Math.floor(Math.random()*PENDING.length);
@@ -1182,6 +1243,56 @@ function newCoin(){
 const overlay = document.getElementById('overlay');
 let activeCoin = null;
 let swapSide = 'buy';
+let sellPercent = 100;
+function setPresets(side){
+  const p = document.getElementById('presets');
+  if (side === 'sell'){
+    p.innerHTML = ['25','50','75','100'].map(v=>`<button class="preset" data-amt="${v}">${v}%</button>`).join('');
+  } else {
+    p.innerHTML = ['0.01','0.05','0.1','0.25'].map(v=>`<button class="preset" data-amt="${v}">${v}</button>`).join('');
+  }
+}
+function heldOf(coin){
+  if (!coin) return null;
+  return tokenBal(coin.address);
+}
+function calcSell(){
+  if (!activeCoin) return;
+  const held = heldOf(activeCoin);
+  const haveAmt = held ? held.amount : 0;
+  const coinAmt = haveAmt * (sellPercent/100);
+  document.getElementById('payAmt').value = coinAmt ? coinAmt.toLocaleString(undefined,{maximumFractionDigits: coinAmt>=1?2:4}) : '0';
+  const ethOut = coinAmt * activeCoin.price / ETH_USD;
+  document.getElementById('recAmt').value = ethOut ? ethOut.toFixed(5) : '';
+  document.getElementById('recRate').textContent = '1 '+activeCoin.sym+' = '+(activeCoin.price/ETH_USD).toFixed(7)+' ETH';
+}
+function applySwapSide(side){
+  swapSide = side;
+  document.querySelectorAll('#bsToggle button').forEach(x=>x.classList.toggle('on', x.dataset.side===side));
+  const sell = side === 'sell';
+  document.getElementById('presets').classList.toggle('sell', sell);
+  document.getElementById('payLbl').textContent = sell ? 'you sell' : 'you pay';
+  // pay-side token: ETH/USDC select for buy, coin label for sell
+  document.getElementById('payTok').style.display = sell ? 'none' : '';
+  const pst = document.getElementById('paySellTok');
+  pst.style.display = sell ? '' : 'none';
+  if (sell && activeCoin) pst.textContent = activeCoin.sym;
+  // receive-side token: coin for buy, ETH for sell
+  const rIco = document.getElementById('swapIco2'); const rTk = document.getElementById('swapTk');
+  if (sell){ rTk.textContent = 'ETH'; rIco.style.visibility = 'hidden'; }
+  else { rTk.textContent = activeCoin ? activeCoin.sym : 'SYM'; rIco.style.visibility = 'visible'; }
+  // balance line
+  const bal = document.getElementById('payBal');
+  if (sell){ const h = heldOf(activeCoin); bal.textContent = 'balance '+(h ? (h.amount>=1?h.amount.toLocaleString(undefined,{maximumFractionDigits:2}):h.amount.toPrecision(3)) : '0')+' '+(activeCoin?activeCoin.sym:''); }
+  else { bal.textContent = 'balance '+(lensWallet?Number(lensWallet.balanceEth||0).toFixed(4):'0.00')+' ETH'; }
+  // presets + amounts
+  setPresets(side);
+  sellPercent = 100;
+  document.getElementById('payAmt').readOnly = sell;
+  if (sell){ document.querySelectorAll('#presets .preset').forEach(x=>x.classList.toggle('on', x.dataset.amt==='100')); calcSell(); }
+  else { document.querySelectorAll('#presets .preset').forEach(x=>x.classList.remove('on')); document.getElementById('payAmt').value=''; document.getElementById('recAmt').value=''; calcSwap(); }
+  updateCta();
+}
 const verdictCopy = {
   clear:'CLEAR · deployer history checks out, no red lines tripped',
   caution:'CAUTION · some red lines tripped, size small and watch the deployer',
@@ -1203,24 +1314,100 @@ function openSwap(sym){
   const v = document.getElementById('swapVerdict');
   v.className = 'swap-verdict '+c.verdict;
   v.textContent = verdictCopy[c.verdict] + (c.trust!=null ? '  ·  trust '+c.trust : '');
-  swapSide = 'buy';
-  document.querySelectorAll('#bsToggle button').forEach(x=>x.classList.toggle('on', x.dataset.side==='buy'));
-  document.getElementById('presets').classList.remove('sell');
-  document.querySelectorAll('#presets .preset').forEach(x=>x.classList.remove('on'));
-  document.getElementById('payLbl').textContent = 'you pay';
-  updateCta();
   document.getElementById('payAmt').value = '';
   document.getElementById('recAmt').value = '';
   document.getElementById('swapNote').classList.remove('show');
+  applySwapSide('buy');
   calcSwap();
   overlay.classList.add('open');
+  chartTf = '1h';
+  document.querySelectorAll('#chartTf button').forEach(b=> b.classList.toggle('on', b.dataset.tf==='1h'));
+  requestAnimationFrame(()=> loadCandles(c, '1h'));
 }
 function closeSwap(){ overlay.classList.remove('open'); }
+
+/* ---------- candle chart ---------- */
+let chartTf = '1h';
+let curCandles = [];
+let candleReq = 0;
+function fmtPrice(p){
+  if (!isFinite(p)) return '';
+  if (p >= 1) return '$'+p.toLocaleString(undefined,{maximumFractionDigits:2});
+  if (p >= 0.01) return '$'+p.toFixed(4);
+  if (p >= 1e-6) return '$'+p.toFixed(8);
+  return '$'+p.toExponential(2);
+}
+async function loadCandles(coin, tf){
+  const canvas = document.getElementById('candleCanvas');
+  const status = document.getElementById('chartStatus');
+  if (!coin || !coin.pool){ curCandles=[]; drawCandles(canvas, []); if(status) status.textContent='chart unavailable'; return; }
+  const my = ++candleReq;
+  if (status) status.textContent = 'loading\u2026';
+  try {
+    const r = await fetch(`${CONFIG.MARKETS_API}?candles=${encodeURIComponent(coin.pool)}&tf=${encodeURIComponent(tf)}`);
+    const j = await r.json().catch(()=>({}));
+    if (my !== candleReq) return;                       // a newer request superseded this one
+    const candles = (j && j.candles) || [];
+    curCandles = candles;
+    drawCandles(canvas, candles);
+    if (status) status.textContent = candles.length ? (coin.sym+' \u00b7 usd') : 'no candles yet';
+  } catch(e){
+    if (my !== candleReq) return;
+    curCandles=[]; drawCandles(canvas, []);
+    if (status) status.textContent = 'chart unavailable';
+  }
+}
+function drawCandles(canvas, candles){
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || (canvas.parentElement && canvas.parentElement.clientWidth) || 320;
+  const cssH = 160;
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssW,cssH);
+  if (!candles || !candles.length) return;
+  const padT=8, padB=14, padL=4, padR=56;
+  const w = cssW - padL - padR, h = cssH - padT - padB;
+  let hi=-Infinity, lo=Infinity;
+  candles.forEach(k=>{ if(k.h>hi)hi=k.h; if(k.l<lo)lo=k.l; });
+  if (!isFinite(hi)||!isFinite(lo)) return;
+  if (hi<=lo){ const m=hi||1; hi=m*1.01; lo=m*0.99; }
+  const n = candles.length;
+  const cw = w / n;
+  const bw = Math.max(1, Math.min(cw*0.66, 9));
+  const y = p => padT + (hi - p)/(hi-lo) * h;
+  const green='#2ecc71', red='#ff5a5a';
+  // gridlines + right-side price labels
+  ctx.font = '10px JetBrains Mono, monospace'; ctx.textAlign='left';
+  const steps=4;
+  for(let i=0;i<=steps;i++){
+    const p = hi - (hi-lo)*i/steps; const yy = y(p);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(padL+w, yy); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.fillText(fmtPrice(p), padL+w+6, yy+3);
+  }
+  // candles
+  candles.forEach((k,i)=>{
+    const cx = padL + i*cw + cw/2;
+    const up = k.c >= k.o;
+    ctx.strokeStyle = up?green:red; ctx.fillStyle = up?green:red;
+    ctx.beginPath(); ctx.moveTo(cx, y(k.h)); ctx.lineTo(cx, y(k.l)); ctx.stroke();
+    const yo=y(k.o), yc=y(k.c); const top=Math.min(yo,yc); let bh=Math.abs(yc-yo); if(bh<1)bh=1;
+    ctx.fillRect(cx-bw/2, top, bw, bh);
+  });
+}
+document.getElementById('chartTf').addEventListener('click', function(e){
+  const b = e.target.closest('button'); if(!b) return;
+  chartTf = b.dataset.tf;
+  document.querySelectorAll('#chartTf button').forEach(x=> x.classList.toggle('on', x===b));
+  loadCandles(activeCoin, chartTf);
+});
+window.addEventListener('resize', ()=>{ if (overlay.classList.contains('open')) drawCandles(document.getElementById('candleCanvas'), curCandles); });
 
 function updateCta(){
   const cta = document.getElementById('swapCta');
   if (!tgUser){ cta.textContent = 'Sign in to trade'; return; }
-  cta.textContent = (swapSide==='sell'?'Sell':'Buy')+' on Base';
+  cta.textContent = swapSide==='sell' ? ('Sell '+sellPercent+'%') : 'Buy on Base';
 }
 function flashToast(title, sub){
   const t = document.createElement('div');
@@ -1254,6 +1441,25 @@ function quickBuy(sym){
   }
   buyToken(c.address, 0.01, c.sym);
 }
+async function sellToken(fromAddr, percent, sym){
+  const s = tgSession();
+  if (!s || !s.token){ openWallet(); return; }
+  if (!fromAddr || !/^0x[a-fA-F0-9]{40}$/.test(fromAddr)){ flashToast('not sellable', 'no token address on file'); return; }
+  const held = tokenBal(fromAddr);
+  if (!held || held.amount <= 0){ flashToast('nothing to sell', 'you do not hold $'+(sym||'this')); return; }
+  percent = Math.min(Math.max(parseInt(percent||100,10)||100,1),100);
+  flashToast('selling '+percent+'%', '$'+(sym||'token')+' \u00b7 routing on Base');
+  try {
+    const r = await fetch(`${CONFIG.WALLET_API}?action=sell&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}&from=${encodeURIComponent(fromAddr)}&percent=${encodeURIComponent(percent)}`);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.ok){
+      flashToast('sold $'+(sym||'token'), d.transactionHash ? ('tx '+d.transactionHash.slice(0,12)+'\u2026') : 'tx sent');
+      loadWallet();
+    } else {
+      flashToast('sell failed', d.error || 'try again');
+    }
+  } catch(e){ flashToast('sell failed', 'network error'); }
+}
 function calcSwap(){
   if (!activeCoin) return;
   const payUsd = document.getElementById('payTok').value==='ETH' ? 3400 : 1;
@@ -1270,7 +1476,14 @@ document.getElementById('payAmt').addEventListener('input', function(){
 document.getElementById('payTok').addEventListener('change', calcSwap);
 document.getElementById('swapCta').addEventListener('click', function(){
   if (!tgUser){ openWallet(); return; }
-  if (swapSide === 'sell'){ document.getElementById('swapNote').classList.add('show'); return; }
+  if (swapSide === 'sell'){
+    if (!activeCoin){ return; }
+    const held = tokenBal(activeCoin.address);
+    if (!held || held.amount<=0){ flashToast('nothing to sell', 'you do not hold $'+activeCoin.sym); return; }
+    sellToken(activeCoin.address, sellPercent, activeCoin.sym);
+    closeSwap();
+    return;
+  }
   const amt = parseFloat(document.getElementById('payAmt').value) || 0;
   if (!activeCoin || !amt){ document.getElementById('swapNote').classList.add('show'); return; }
   buyToken(activeCoin.address, amt, activeCoin.sym);
@@ -1280,17 +1493,18 @@ document.getElementById('presets').addEventListener('click', function(e){
   const b = e.target.closest('.preset'); if(!b) return;
   document.querySelectorAll('#presets .preset').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
-  document.getElementById('payAmt').value = b.dataset.amt;
-  calcSwap();
+  if (swapSide === 'sell'){
+    sellPercent = parseInt(b.dataset.amt,10)||100;
+    calcSell();
+    updateCta();
+  } else {
+    document.getElementById('payAmt').value = b.dataset.amt;
+    calcSwap();
+  }
 });
 document.getElementById('bsToggle').addEventListener('click', function(e){
   const b = e.target.closest('button'); if(!b) return;
-  swapSide = b.dataset.side;
-  document.querySelectorAll('#bsToggle button').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on');
-  document.getElementById('presets').classList.toggle('sell', swapSide==='sell');
-  document.getElementById('payLbl').textContent = swapSide==='sell' ? 'you sell' : 'you pay';
-  updateCta();
+  applySwapSide(b.dataset.side);
 });
 
 /* ---------- connect wallet modal ---------- */
@@ -1305,12 +1519,21 @@ walletOverlay.addEventListener('click', e=>{ if(e.target===walletOverlay) closeW
 
 let account = null;
 function shortAddr(a){ return a.slice(0,6)+'…'+a.slice(-4); }
-function setConnectedUI(){
-  const nav = document.getElementById('connectBtnNav');
-  const svg = nav.querySelector('svg').outerHTML;
-  nav.innerHTML = svg + (account ? shortAddr(account) : 'Sign in');
-  document.getElementById('mbConnect').textContent = account ? shortAddr(account) : 'Sign in';
+function authLabel(){
+  if (account) return shortAddr(account);
+  if (tgUser) return '@' + tgUser;
+  const s = tgSession();
+  if (s && s.token && (!s.exp || s.exp > Date.now())) return 'Account';
+  return 'Sign in';
 }
+function renderAuthBtn(){
+  const nav = document.getElementById('connectBtnNav'); if (!nav) return;
+  const svg = nav.querySelector('svg').outerHTML;
+  const label = authLabel();
+  nav.innerHTML = svg + label;
+  const mb = document.getElementById('mbConnect'); if (mb) mb.textContent = label;
+}
+function setConnectedUI(){ renderAuthBtn(); }
 function getProvider(name){
   const eth = window.ethereum;
   if (!eth) return null;
@@ -1359,21 +1582,15 @@ let tgUser = null;
 
 function setTgUI(username){
   tgUser = username || null;
-  const label = tgUser ? ('@' + tgUser) : null;
-  const nav = document.getElementById('connectBtnNav');
-  const svg = nav.querySelector('svg').outerHTML;
-  if (label) nav.innerHTML = svg + label;
-  const mb = document.getElementById('mbConnect');
-  if (label) mb.textContent = label;
+  renderAuthBtn();
 }
 
 function logout(){
   try { localStorage.removeItem('lens_tg'); } catch(e){}
   tgUser = null;
-  const nav = document.getElementById('connectBtnNav');
-  const svg = nav.querySelector('svg').outerHTML;
-  nav.innerHTML = svg + 'Sign in';
-  document.getElementById('mbConnect').textContent = 'Sign in';
+  lensWallet = null;
+  lensTokens = [];
+  renderAuthBtn();
   const ov = document.getElementById('acctOverlay'); if (ov) ov.classList.remove('open');
 }
 
@@ -1414,17 +1631,64 @@ function openAccount(){
 }
 
 let lensWallet = null;        // { address, balanceEth, network }
+let lensTokens = [];          // [{ address, symbol, amount, raw, decimals }]
 const ETH_USD = 3400;         // rough display rate
 function tgSession(){ try { return JSON.parse(localStorage.getItem('lens_tg')||'null'); } catch(e){ return null; } }
+function symFor(addr){
+  if (!addr) return null;
+  const c = COINS.find(x=> (x.address||'').toLowerCase() === addr.toLowerCase());
+  return c ? c.sym : null;
+}
+function tokenBal(addr){
+  if (!addr) return null;
+  return lensTokens.find(t => (t.address||'').toLowerCase() === addr.toLowerCase()) || null;
+}
+let lensPnl = null;           // { positions:[...], totals:{...} }
+function pnlFor(addr){
+  if (!lensPnl || !addr) return null;
+  return (lensPnl.positions||[]).find(p => (p.address||'').toLowerCase() === addr.toLowerCase()) || null;
+}
+function fmtUsd(n){
+  const a = Math.abs(n);
+  const s = a >= 1 ? a.toLocaleString(undefined,{maximumFractionDigits:2}) : a.toFixed(a>=0.01?2:4);
+  return (n<0?'-$':'$')+s;
+}
+function fmtPnl(usd, pct){
+  const up = usd >= 0;
+  const sign = up ? '+' : '';
+  let txt = sign + fmtUsd(usd);
+  if (pct != null && isFinite(pct)) txt += '  \u00b7  ' + sign + pct.toFixed(1) + '%';
+  return `<span style="color:${up?'var(--green)':'var(--red)'}">${txt}</span>`;
+}
 async function loadWallet(){
   const s = tgSession();
   if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return null;
   try {
     const r = await fetch(`${CONFIG.WALLET_API}?tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
     const d = await r.json().catch(()=>({}));
-    if (d && d.ok){ lensWallet = { address: d.address, balanceEth: d.balanceEth||0, network: d.network }; updatePortfolioWallet(); return lensWallet; }
+    if (d && d.ok){ lensWallet = { address: d.address, balanceEth: d.balanceEth||0, network: d.network }; updatePortfolioWallet(); }
   } catch(e){}
-  return null;
+  loadTokens();
+  loadPnl();
+  return lensWallet;
+}
+async function loadTokens(){
+  const s = tgSession();
+  if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return;
+  try {
+    const r = await fetch(`${CONFIG.WALLET_API}?action=tokens&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.ok && Array.isArray(d.tokens)){ lensTokens = d.tokens; updatePortfolioWallet(); }
+  } catch(e){}
+}
+async function loadPnl(){
+  const s = tgSession();
+  if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return;
+  try {
+    const r = await fetch(`${CONFIG.WALLET_API}?action=pnl&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.ok){ lensPnl = { positions: d.positions||[], totals: d.totals||null }; updatePortfolioWallet(); }
+  } catch(e){}
 }
 function updatePortfolioWallet(){
   const ov = document.getElementById('pfOverlay'); if (!ov) return;
@@ -1435,19 +1699,62 @@ function updatePortfolioWallet(){
   const w = ov.querySelector('#pfWallet'); if (!w) return;
   if (!tgSession()){ w.innerHTML = '<div class="pf-empty" style="padding:14px 0">sign in to get your Base wallet</div>'; return; }
   if (!lensWallet){ w.innerHTML = '<div class="pf-empty" style="padding:14px 0">setting up your wallet\u2026<br>give it a sec</div>'; return; }
-  w.innerHTML = `<div class="tr-row" style="margin-bottom:10px">
+  let html = `<div class="tr-row" style="margin-bottom:10px">
     <div class="tr-ava">\u039e</div>
     <div class="tr-meta"><div class="l">my Base wallet</div><div class="a">${shortA(lensWallet.address)}</div></div>
     <div class="tr-acts"><button id="pfCopy">Copy</button><button id="pfScan">Scan</button></div>
-  </div>
-  <button class="acct-row danger" id="pfExport" style="margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Export private key<span></span></button>`;
+  </div>`;
+  // total PnL card (real, from executed trades)
+  if (lensPnl && lensPnl.totals && (lensPnl.totals.valueUsd > 0 || Math.abs(lensPnl.totals.realizedUsd||0) > 1e-6)){
+    const tt = lensPnl.totals;
+    html += `<div class="acct-sec" style="margin:14px 2px 9px">PROFIT &amp; LOSS</div>
+      <div class="tr-row" style="margin-bottom:8px;align-items:center">
+        <div class="tr-meta"><div class="l" style="font-size:13px">total PnL</div><div class="a">holdings ${fmtUsd(tt.valueUsd||0)}${Math.abs(tt.realizedUsd||0)>1e-6?(' \u00b7 realized '+fmtUsd(tt.realizedUsd)):''}</div></div>
+        <div style="margin-left:auto;text-align:right;font-weight:800;font-size:15px">${fmtPnl(tt.pnlUsd||0, tt.pnlPct)}</div>
+      </div>`;
+  }
+  const holds = (lensTokens||[]).filter(t => t.amount > 0);
+  if (holds.length){
+    html += '<div class="acct-sec" style="margin:14px 2px 9px">HOLDINGS</div>';
+    html += holds.map(t=>{
+      const sym = t.symbol || symFor(t.address) || shortA(t.address);
+      const amt = t.amount >= 1 ? t.amount.toLocaleString(undefined,{maximumFractionDigits:2}) : t.amount.toPrecision(3);
+      const pos = pnlFor(t.address);
+      const pnlLine = (pos && (pos.valueUsd>0)) ? `<div class="a" style="margin-top:2px">${fmtUsd(pos.valueUsd)} \u00b7 ${fmtPnl(pos.unrealizedUsd||0, pos.pnlPct)}</div>` : '';
+      return `<div class="tr-row" style="margin-bottom:8px">
+        <div class="tr-ava" style="background:linear-gradient(135deg,#2ecc71,#1f9e57)">${String(sym||'?').charAt(0).toUpperCase()}</div>
+        <div class="tr-meta"><div class="l">$${sym} <span style="color:var(--text3);font-weight:500">${amt}</span></div>${pnlLine}</div>
+        <div class="tr-acts"><button class="del" data-sell="${t.address}" data-sym="${sym}">Sell</button></div>
+      </div>`;
+    }).join('');
+  }
+  html += `<button class="acct-row danger" id="pfExport" style="margin:14px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Export private key<span></span></button>`;
+  w.innerHTML = html;
   w.querySelector('#pfCopy').addEventListener('click', ()=>{ if(navigator.clipboard) navigator.clipboard.writeText(lensWallet.address); flashToast('copied', shortA(lensWallet.address)); });
   w.querySelector('#pfScan').addEventListener('click', ()=> window.open('https://basescan.org/address/'+lensWallet.address,'_blank'));
   w.querySelector('#pfExport').addEventListener('click', exportKey);
+  w.querySelectorAll('[data-sell]').forEach(b=> b.addEventListener('click', ()=> sellToken(b.dataset.sell, 100, b.dataset.sym)));
 }
-async function exportKey(){
+function exportKey(){
+  let ov = document.getElementById('exConfirm');
+  if (!ov){
+    ov = document.createElement('div'); ov.className = 'overlay'; ov.id = 'exConfirm';
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-head"><span style="font-weight:800;font-size:18px">Export private key</span><button class="sheet-x" id="excClose">\u2715</button></div>
+      <div class="swap-verdict stop" style="margin-bottom:16px">this reveals the key that controls your wallet and all its funds. anyone who sees it can drain you. never share it or paste it into any site or bot</div>
+      <button class="rf-copy" id="excGo" style="background:var(--red)">Reveal my private key</button>
+      <button class="acct-row" id="excCancel" style="margin:10px 0 0;justify-content:center">Cancel</button>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('open'); });
+    ov.querySelector('#excClose').addEventListener('click', ()=> ov.classList.remove('open'));
+    ov.querySelector('#excCancel').addEventListener('click', ()=> ov.classList.remove('open'));
+    ov.querySelector('#excGo').addEventListener('click', ()=>{ ov.classList.remove('open'); doExport(); });
+  }
+  ov.classList.add('open');
+}
+async function doExport(){
   const s = tgSession(); if (!s) return;
-  if (!window.confirm('Export your private key?\n\nAnyone with this key has full control of your wallet and funds. Never share it, never paste it into any site or bot.')) return;
   flashToast('exporting\u2026','hold on');
   try {
     const r = await fetch(`${CONFIG.WALLET_API}?action=export&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
@@ -1704,7 +2011,11 @@ if (!reduce){
 
 // go live if data is reachable, otherwise the demo above keeps running
 loadLive().then(ok=>{
-  if (ok) setInterval(pollPrices, CONFIG.PRICE_REFRESH_MS);
+  if (ok){
+    COINS.forEach(c=> seenAddrs.add(c.address));   // seed so existing coins don't toast as "new"
+    setInterval(pollPrices, CONFIG.PRICE_REFRESH_MS);
+    setInterval(pollNew, 30000);                    // watch for fresh clanker/bankr launches
+  }
 }).catch(()=>{});
 
 // reconnect silently if the wallet was already authorized
