@@ -969,7 +969,7 @@ async function loadLive(){
           for(let i=0;i<24;i++) spark.push(Math.max(1e-12, st+step*i));
           return { address:String(x.address).toLowerCase(), sym:x.sym||x.symbol||'?', name:x.name||x.sym||'token',
             src:(String(x.src||'bankr').includes('clank')?'clanker':'bankr'), verdict:normVerdict(x.verdict), trust:(x.trust!=null?x.trust:null),
-            price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, pool:x.pool||null, spark, born:Date.now(), live:true };
+            price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, pool:x.pool||null, spark, born:(x.ts||Date.now()), live:true };
         });
         if (coins.length){ COINS=coins; DEMO=false; setDataMode(); buildTicker(); refreshStats(); refreshTopVol(); render(); return true; }
       }
@@ -1149,14 +1149,19 @@ function tick(){
 }
 
 /* ---------- stats ---------- */
+// the stats panel + top-vol widget follow the active source toggle (All / Bankr / Clanker)
+function srcScoped(){
+  return state.src === 'all' ? COINS : COINS.filter(c => c.src === state.src);
+}
 function refreshStats(){
-  const vol = COINS.reduce((s,c)=>s+c.vol24,0);
+  const pool = srcScoped();
+  const vol = pool.reduce((s,c)=>s+c.vol24,0);
   document.getElementById('statVol').textContent = fmtUsd(vol);
-  document.getElementById('statScans').textContent = COINS.length;
-  document.getElementById('statStops').textContent = COINS.filter(c=>c.verdict==='stop').length;
+  document.getElementById('statScans').textContent = pool.length;
+  document.getElementById('statStops').textContent = pool.filter(c=>c.verdict==='stop').length;
 }
 function refreshTopVol(){
-  const top = COINS.slice().sort((a,b)=>b.vol24-a.vol24).slice(0,3);
+  const top = srcScoped().slice().sort((a,b)=>b.vol24-a.vol24).slice(0,3);
   document.getElementById('topVolList').innerHTML = top.map((c,i)=>{
     const pal = palettes[i%palettes.length];
     return `<div class="tv-row"><img class="tv-ico" src="${ico(i+30,pal[0],pal[1],c.sym)}" alt=""><span class="tv-sym">$${c.sym}</span><span class="tv-mc">${fmtUsd(c.mcap)}</span><span class="tv-vol">${fmtUsd(c.vol24)}</span></div>`;
@@ -1207,7 +1212,7 @@ async function pollNew(){
       for(let i=0;i<24;i++) spark.push(Math.max(1e-12, st+step*i));
       const c = { address:a, sym:x.sym||x.symbol||'?', name:x.name||x.sym||'token',
         src:(String(x.src||'bankr').includes('clank')?'clanker':'bankr'), verdict:normVerdict(x.verdict), trust:(x.trust!=null?x.trust:null),
-        price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, pool:x.pool||null, spark, born:Date.now(), live:true };
+        price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, pool:x.pool||null, spark, born:(x.ts||Date.now()), live:true };
       COINS.unshift(c);
       liveToast(c);
       added = true;
@@ -2057,6 +2062,8 @@ function wireSeg(id, key, attr){
     btn.classList.add('on');
     state[key] = btn.dataset[attr];
     render();
+    refreshStats();
+    refreshTopVol();
   });
 }
 wireSeg('srcSeg','src','src');
