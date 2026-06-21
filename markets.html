@@ -328,6 +328,30 @@
   .presets.sell .preset { border-color: rgba(255,90,90,.26); background: rgba(255,90,90,.05); color: var(--red); }
   .presets.sell .preset:hover, .presets.sell .preset.on { background: rgba(255,90,90,.18); }
 
+  /* account menu + portfolio (kupo-style) */
+  .acct-ava { width: 40px; height: 40px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; background: linear-gradient(135deg, #6c8bff, #b06cff); }
+  .acct-row { display: flex; align-items: center; gap: 13px; width: 100%; padding: 14px 15px; border-radius: 13px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: .15s; text-align: left; text-decoration: none; margin-bottom: 8px; }
+  .acct-row:hover { border-color: var(--border2); }
+  .acct-row > svg { width: 19px; height: 19px; flex: none; color: var(--text2); }
+  .acct-row .chev { margin-left: auto; width: 16px; height: 16px; color: var(--text3); }
+  .acct-row.danger { color: var(--red); border-color: rgba(255,90,90,.28); background: rgba(255,90,90,.07); }
+  .acct-row.danger > svg { color: var(--red); }
+  .acct-sec { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--text3); margin: 14px 2px 9px; }
+  .pf-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .pf-head .t { font-size: 20px; font-weight: 800; }
+  .pf-head .pill { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border2); color: var(--text3); }
+  .pf-bal-lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--text3); }
+  .pf-bal { font-size: 34px; font-weight: 800; margin: 5px 0 2px; font-family: 'JetBrains Mono', monospace; }
+  .pf-bal .u { font-size: 17px; color: var(--text3); margin-left: 6px; }
+  .pf-chg { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+  .pf-hold { margin-top: 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .pf-hold .l { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--text3); }
+  .pf-hold .v { font-size: 22px; font-weight: 800; margin-top: 6px; }
+  .pf-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border); margin-top: 20px; }
+  .pf-tabs button { background: none; border: none; color: var(--text3); font-family: inherit; font-size: 14px; font-weight: 700; padding: 0 0 12px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .pf-tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
+  .pf-empty { text-align: center; padding: 34px 20px; color: var(--text3); font-size: 13.5px; line-height: 1.55; }
+
   /* SHARED MODAL (wallet + deploy) */
   .sheet {
     width: 100%; max-width: 440px; background: var(--bg2); border: 1px solid var(--border2);
@@ -1347,18 +1371,56 @@ function openAccount(){
     ov.id = 'acctOverlay';
     ov.innerHTML = `<div class="sheet">
       <div class="sheet-head"><span></span><button class="sheet-x" id="acctClose">\u2715</button></div>
-      <div class="sheet-logo">
-        <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#229ED9"/><path d="M22.5 8.5l-3 11c-.2.7-.7.9-1.4.6l-3.4-2.5-1.6 1.6c-.2.2-.3.3-.7.3l.25-3.5 6.4-5.8c.28-.25-.06-.4-.43-.15l-7.9 5-3.4-1.06c-.74-.23-.76-.74.16-1.1l13.3-5.1c.62-.23 1.16.15.96 1.1z" fill="#fff"/></svg>
+      <div class="sheet-logo" style="margin-bottom:18px">
+        <div class="acct-ava" id="acctAva">@</div>
         <div><div class="st" id="acctName">@you</div><div class="ss">signed in with Telegram</div></div>
       </div>
-      <button class="wallet-opt" id="acctLogout" style="justify-content:center;font-weight:700;border-color:#ff5a5a;background:rgba(255,90,90,.08);color:#ff5a5a;">Log out</button>
+      <button class="acct-row" id="acctPortfolio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="3"/><path d="M16 13h2"/><path d="M2 10h16a2 2 0 0 1 2 2"/></svg>Portfolio<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="acct-row" id="acctWatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.1 8.6 22 9.3 17 14.1 18.2 21 12 17.6 5.8 21 7 14.1 2 9.3 8.9 8.6"/></svg>Watchlist<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <a class="acct-row" href="/lens-docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M19 16H7"/></svg>Docs<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+      <div class="acct-sec">ACCOUNT</div>
+      <button class="acct-row" id="acctWallet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Manage wallet<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="acct-row danger" id="acctLogout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Log out</button>
     </div>`;
     document.body.appendChild(ov);
     ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('open'); });
     ov.querySelector('#acctClose').addEventListener('click', ()=> ov.classList.remove('open'));
     ov.querySelector('#acctLogout').addEventListener('click', logout);
+    ov.querySelector('#acctPortfolio').addEventListener('click', ()=>{ ov.classList.remove('open'); openPortfolio(); });
+    ov.querySelector('#acctWatch').addEventListener('click', ()=> flashToast('watchlist soon', 'landing in a later drop'));
+    ov.querySelector('#acctWallet').addEventListener('click', ()=> flashToast('wallet · Fase 2', 'your Base wallet is being set up safely via Coinbase CDP'));
   }
   ov.querySelector('#acctName').textContent = '@' + (tgUser || 'you');
+  ov.querySelector('#acctAva').textContent = (tgUser || 'y').charAt(0).toUpperCase();
+  ov.classList.add('open');
+}
+
+function openPortfolio(){
+  let ov = document.getElementById('pfOverlay');
+  if (!ov){
+    ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.id = 'pfOverlay';
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-head"><span></span><button class="sheet-x" id="pfClose">\u2715</button></div>
+      <div class="pf-head"><span class="t">Portfolio</span><span class="pill">SPOT</span></div>
+      <div class="pf-bal-lbl">TOTAL BALANCE</div>
+      <div class="pf-bal">0.000<span class="u">ETH</span> <span class="u" style="font-size:15px">$0.00</span></div>
+      <div class="pf-chg">+0.000 ETH (+0.0%)</div>
+      <div class="pf-hold"><div class="l">HOLDINGS</div><div class="v">0</div></div>
+      <div class="pf-tabs">
+        <button class="on">Active Positions</button>
+        <button>History</button>
+      </div>
+      <div class="pf-empty">no positions yet<br>your LENS wallet activates in Fase 2, lagi disiapin aman lewat Coinbase CDP</div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('open'); });
+    ov.querySelector('#pfClose').addEventListener('click', ()=> ov.classList.remove('open'));
+    ov.querySelectorAll('.pf-tabs button').forEach(b=>{
+      b.addEventListener('click', ()=>{ ov.querySelectorAll('.pf-tabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+    });
+  }
   ov.classList.add('open');
 }
 
