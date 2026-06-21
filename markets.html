@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LENS Markets · every launch, scanned</title>
+<meta name="description" content="Live Bankr and Clanker launches on Base, each pre-scanned by LENS with a CLEAR / CAUTION / STOP verdict. Live prices, drift prediction, and one-tap trade.">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7' fill='%232952e3'/%3E%3Cpath d='M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z' fill='none' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='14' r='3.2' fill='none' stroke='white' stroke-width='1.8'/%3E%3Ccircle cx='14' cy='14' r='1.1' fill='white'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #161616;
+    --border: #1f1f1f;
+    --border2: #2a2a2a;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #2952e3;
+    --accent2: #1a3acc;
+    --accent-light: #4a72ff;
+    --green: #2ecc71;
+    --amber: #e0843a;
+    --red: #ff5a5a;
+  }
+  html.light {
+    --bg: #f4f4f5;
+    --bg2: #ffffff;
+    --bg3: #fafafa;
+    --border: #e0e0e2;
+    --border2: #d4d4d6;
+    --text: #0a0a0a;
+    --text2: #666;
+    --text3: #999;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { overflow-x: clip; scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+    position: relative;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: inherit; }
+
+  /* AMBIENT BACKGROUND (no grid, just glow + dots + flow lines) */
+  .page-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .page-bg .glow {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(620px 500px at 4% -8%, rgba(41,82,227,.40), transparent 60%),
+      radial-gradient(380px 360px at -3% 44%, rgba(224,132,58,.11), transparent 60%),
+      radial-gradient(460px 400px at 103% 6%, rgba(41,82,227,.08), transparent 60%);
+  }
+  .page-bg .dots {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(120,150,255,.22) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(760px 620px at 2% -4%, #000 0%, rgba(0,0,0,.5) 46%, transparent 78%);
+            mask-image: radial-gradient(760px 620px at 2% -4%, #000 0%, rgba(0,0,0,.5) 46%, transparent 78%);
+  }
+  .page-bg .flow { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 220px; opacity: .5; }
+  html.light .page-bg .dots { opacity: .5; }
+  html.light .page-bg .glow { opacity: .7; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .nav-logo svg { width: 28px; height: 28px; }
+  .nav-logo-text { font-weight: 800; letter-spacing: .14em; font-size: 15px; color: var(--text); }
+  .nav-links { display: flex; align-items: center; gap: 26px; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .15s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .nav-links a.active { color: var(--accent-light); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-btn {
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 8px 15px; border-radius: 9px; transition: .15s; white-space: nowrap;
+  }
+  .nav-btn.launch { background: rgba(41,82,227,.14); color: var(--accent-light); border: 1px solid rgba(41,82,227,.32); }
+  .nav-btn.launch:hover { background: rgba(41,82,227,.22); }
+  .nav-btn.connect { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+  .nav-btn.connect:hover { background: var(--accent2); border-color: var(--accent2); }
+  .nav-btn.launch svg, .nav-btn.connect svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 5px; }
+  .theme-toggle { background: none; border: none; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .theme-toggle svg { width: 21px; height: 21px; }
+  .theme-toggle:hover { color: var(--text); }
+  .nav-mobile-btn {
+    background: none; border: 1px solid var(--border2); color: var(--text2);
+    width: 36px; height: 36px; border-radius: 9px; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  .nav-mobile-btn:hover { color: var(--text); border-color: var(--text3); }
+  .mobile-menu {
+    display: none; flex-direction: column; gap: 4px; position: relative; z-index: 40;
+    padding: 12px 20px 20px; border-bottom: 1px solid var(--border); background: var(--bg2);
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a { color: var(--text2); text-decoration: none; padding: 10px 0; font-weight: 500; border-bottom: 1px solid var(--border); }
+  .mobile-menu a:last-child { border-bottom: none; }
+
+  /* TICKER STRIP */
+  .ticker-strip {
+    position: relative; z-index: 5;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg2) 90%, transparent);
+    overflow: hidden; white-space: nowrap;
+  }
+  .ticker-track { display: inline-flex; align-items: center; gap: 0; animation: ticker 42s linear infinite; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .ticker-strip:hover .ticker-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+  .tk {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 9px 18px; border-right: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+  .tk-ico { width: 18px; height: 18px; border-radius: 50%; flex: none; }
+  .tk-sym { font-weight: 700; letter-spacing: .02em; }
+  .tk-ca { font-family: 'JetBrains Mono', monospace; color: var(--text3); font-size: 11px; }
+  .tk-move { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .tk-move.up { color: var(--green); }
+  .tk-move.down { color: var(--red); }
+
+  /* LAYOUT */
+  .wrap { position: relative; z-index: 10; max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+
+  /* HEADER */
+  .mk-head { padding: 40px 0 8px; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .22em;
+    color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; gap: 9px;
+  }
+  .eyebrow b { color: var(--text); font-weight: 600; }
+  .eyebrow .tag { color: var(--amber); }
+  .eyebrow .dm { margin-left: 6px; font-size: 9.5px; letter-spacing: .14em; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border2); color: var(--text3); }
+  .eyebrow .dm.live { color: var(--green); border-color: rgba(46,204,113,.4); }
+  .mk-head h1 { font-size: clamp(30px, 6vw, 46px); font-weight: 800; letter-spacing: -.02em; line-height: 1.04; }
+  .mk-head h1 .accent { color: var(--accent-light); }
+  .mk-head p { color: var(--text2); font-size: 15.5px; max-width: 540px; margin-top: 12px; }
+
+  /* STATS */
+  .stat-row { display: grid; grid-template-columns: 1.15fr 1.15fr 1fr; gap: 16px; margin-top: 26px; }
+  .scard {
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border2); border-radius: 18px; padding: 20px 22px;
+  }
+  .scard.blue {
+    background: linear-gradient(150deg, rgba(41,82,227,.16), rgba(41,82,227,.03));
+    box-shadow: 0 0 50px rgba(41,82,227,.07);
+  }
+  .scard.plain { background: var(--bg2); }
+  .scard .lbl { font-size: 12.5px; color: var(--text2); margin-bottom: 8px; }
+  .scard .big { font-family: 'JetBrains Mono', monospace; font-size: clamp(26px, 5vw, 34px); font-weight: 700; letter-spacing: -.01em; }
+  .scard .evt {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+    padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: var(--bg3); border: 1px solid var(--border);
+  }
+  .scard .evt .d { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(46,204,113,.16); }
+  .scard .evt b { color: var(--green); font-family: 'JetBrains Mono', monospace; }
+
+  .topvol { background: var(--bg2); }
+  .topvol .lbl { display: flex; align-items: center; justify-content: space-between; }
+  .topvol .lbl .live { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 6px; }
+  .topvol .lbl .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .tv-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .tv-row:first-of-type { border-top: none; }
+  .tv-ico { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+  .tv-sym { font-weight: 700; }
+  .tv-mc { margin-left: auto; font-family: 'JetBrains Mono', monospace; color: var(--text2); }
+  .tv-vol { font-family: 'JetBrains Mono', monospace; min-width: 56px; text-align: right; }
+
+  /* CONTROLS */
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 30px; }
+  .seg { display: flex; gap: 5px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .seg button {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 9px; border: none; background: none; cursor: pointer;
+    font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text2); transition: .15s;
+  }
+  .seg button:hover { color: var(--text); }
+  .seg button svg { width: 14px; height: 14px; flex: none; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .seg.verdict button.on[data-v="clear"] { background: rgba(46,204,113,.16); color: var(--green); }
+  .seg.verdict button.on[data-v="caution"] { background: rgba(224,132,58,.16); color: var(--amber); }
+  .seg.verdict button.on[data-v="stop"] { background: rgba(255,90,90,.16); color: var(--red); }
+  .seg .src-dot { width: 8px; height: 8px; border-radius: 2px; }
+  .src-dot.bankr { background: var(--accent-light); }
+  .src-dot.clanker { background: var(--amber); }
+  .search {
+    margin-left: auto; display: flex; align-items: center; gap: 9px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px;
+    min-width: 220px;
+  }
+  .search svg { width: 16px; height: 16px; color: var(--text3); flex: none; }
+  .search input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 13.5px; }
+  .search input::placeholder { color: var(--text3); }
+
+  /* TABLE */
+  .board { margin-top: 16px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--bg2); }
+  .board-head, .crow {
+    display: grid;
+    grid-template-columns: 2.4fr 1fr 1.15fr 1.1fr 1fr 1.3fr 92px;
+    align-items: center; gap: 10px;
+  }
+  .board-head {
+    padding: 13px 20px; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; color: var(--text3); text-transform: uppercase;
+  }
+  .board-head .r { text-align: right; }
+  .crow { padding: 14px 20px; border-bottom: 1px solid var(--border); transition: background .15s; }
+  .crow:last-child { border-bottom: none; }
+  .crow:hover { background: var(--bg3); }
+  .crow.fresh { animation: dropIn .5s ease; }
+  @keyframes dropIn { from { background: rgba(41,82,227,.14); opacity: .3; transform: translateY(-6px); } }
+
+  .coin { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .coin-ico { width: 38px; height: 38px; border-radius: 50%; flex: none; border: 1px solid var(--border2); }
+  .coin-meta { min-width: 0; }
+  .coin-name { font-weight: 700; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coin-sub { display: flex; align-items: center; gap: 8px; margin-top: 2px; font-size: 11.5px; color: var(--text3); }
+  .coin-tk { font-family: 'JetBrains Mono', monospace; }
+
+  .srcpill { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 9px; border-radius: 7px; background: var(--bg3); border: 1px solid var(--border); width: fit-content; }
+  .srcpill .src-dot { width: 7px; height: 7px; border-radius: 2px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 5px 10px; border-radius: 8px; width: fit-content; }
+  .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+  .badge.clear { color: var(--green); background: rgba(46,204,113,.10); border: 1px solid rgba(46,204,113,.28); }
+  .badge.clear::before { background: var(--green); }
+  .badge.caution { color: var(--amber); background: rgba(224,132,58,.10); border: 1px solid rgba(224,132,58,.28); }
+  .badge.caution::before { background: var(--amber); }
+  .badge.stop { color: var(--red); background: rgba(255,90,90,.10); border: 1px solid rgba(255,90,90,.28); }
+  .badge.stop::before { background: var(--red); }
+
+  .price { text-align: right; }
+  .price .p { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; transition: color .35s; }
+  .price .p.flash-up { color: var(--green); }
+  .price .p.flash-down { color: var(--red); }
+  .price .c { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; margin-top: 2px; }
+  .price .c.up { color: var(--green); }
+  .price .c.down { color: var(--red); }
+
+  .cell-r { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--text2); }
+
+  .predict { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+  .spark { width: 56px; height: 24px; flex: none; }
+  .pchip { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; padding: 3px 7px; border-radius: 6px; white-space: nowrap; }
+  .pchip.up { color: var(--green); background: rgba(46,204,113,.10); }
+  .pchip.down { color: var(--red); background: rgba(255,90,90,.10); }
+
+  .trade-btn {
+    justify-self: end; padding: 8px 16px; border-radius: 9px; border: 1px solid var(--border2);
+    background: var(--bg3); color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s;
+  }
+  .trade-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .coin-mobile-extra { display: none; }
+
+  /* TRADE MODAL */
+  .overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.62); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; padding: 0; }
+  .overlay.open { display: flex; }
+  .swap {
+    width: 100%; max-width: 440px; background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 20px 20px 0 0; padding: 20px; animation: slideUp .28s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: .6; } }
+  .swap-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .swap-title { display: flex; align-items: center; gap: 10px; }
+  .swap-title .coin-ico { width: 32px; height: 32px; }
+  .swap-title .t { font-weight: 800; }
+  .swap-title .s { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text3); }
+  .swap-x { background: none; border: 1px solid var(--border2); color: var(--text2); width: 32px; height: 32px; border-radius: 9px; cursor: pointer; font-size: 16px; }
+  .swap-x:hover { color: var(--text); }
+  .swap-verdict { font-size: 12.5px; padding: 10px 14px; border-radius: 11px; margin-bottom: 14px; line-height: 1.45; }
+  .swap-verdict.clear { color: var(--green); background: rgba(46,204,113,.08); border: 1px solid rgba(46,204,113,.24); }
+  .swap-verdict.caution { color: var(--amber); background: rgba(224,132,58,.08); border: 1px solid rgba(224,132,58,.24); }
+  .swap-verdict.stop { color: var(--red); background: rgba(255,90,90,.08); border: 1px solid rgba(255,90,90,.24); }
+  .swap-field { background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .swap-field + .swap-field { margin-top: 6px; }
+  .swap-field .ft { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .swap-field .fb { display: flex; align-items: center; gap: 10px; }
+  .swap-field input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 500; width: 100%; }
+  .swap-field input::placeholder { color: var(--text3); }
+  .tok-sel { display: flex; align-items: center; gap: 7px; background: var(--bg2); border: 1px solid var(--border2); border-radius: 999px; padding: 6px 12px 6px 8px; font-weight: 700; font-size: 14px; white-space: nowrap; cursor: pointer; }
+  .tok-sel .coin-ico { width: 22px; height: 22px; border: none; }
+  .tok-sel select { background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .swap-arrow { display: flex; justify-content: center; margin: -10px 0; position: relative; z-index: 2; }
+  .swap-arrow span { width: 34px; height: 34px; border-radius: 11px; background: var(--bg2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; color: var(--text2); }
+  .swap-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin: 14px 2px 0; }
+  .swap-cta { width: 100%; margin-top: 16px; padding: 15px; border-radius: 13px; background: var(--accent); color: #fff; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; transition: .15s; }
+  .swap-cta:hover { background: var(--accent2); }
+  .swap-note { margin-top: 12px; font-size: 12px; color: var(--text2); text-align: center; display: none; }
+  .swap-note.show { display: block; animation: fade .25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } }
+
+  /* SHARED MODAL (wallet + deploy) */
+  .sheet {
+    width: 100%; max-width: 440px; background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 20px 20px 0 0; padding: 22px 20px 24px; animation: slideUp .28s ease;
+  }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .sheet-x { background: none; border: 1px solid var(--border2); color: var(--text2); width: 32px; height: 32px; border-radius: 9px; cursor: pointer; font-size: 16px; }
+  .sheet-x:hover { color: var(--text); }
+  .sheet-logo { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; margin: 6px 0 20px; }
+  .sheet-logo svg { width: 44px; height: 44px; }
+  .sheet-logo .st { font-size: 19px; font-weight: 800; letter-spacing: -.01em; }
+  .sheet-logo .ss { font-size: 13px; color: var(--text2); }
+
+  .wallet-opt {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 13px;
+    padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: .15s;
+    font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text); text-align: left;
+  }
+  .wallet-opt:hover { border-color: var(--accent); background: var(--bg2); }
+  .wallet-opt .wi { width: 34px; height: 34px; border-radius: 9px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .wallet-opt .wsub { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--text3); }
+  .wallet-opt .dotg { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .sheet-terms { margin-top: 16px; font-size: 12px; color: var(--text3); text-align: center; line-height: 1.5; }
+  .sheet-terms a { color: var(--accent-light); text-decoration: none; }
+  .sheet-divider { display: flex; align-items: center; gap: 12px; margin: 14px 2px; color: var(--text3); font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: .1em; }
+  .sheet-divider::before, .sheet-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  /* DEPLOY FORM */
+  .dfield { margin-bottom: 14px; }
+  .dfield label { display: block; font-size: 12.5px; color: var(--text2); margin-bottom: 7px; }
+  .dfield input, .dfield textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px;
+    padding: 13px 14px; color: var(--text); font-family: inherit; font-size: 14.5px; outline: none; transition: border-color .15s;
+  }
+  .dfield input:focus, .dfield textarea:focus { border-color: var(--accent); }
+  .dfield textarea { resize: none; min-height: 64px; }
+  .dfield input::placeholder, .dfield textarea::placeholder { color: var(--text3); }
+  .dfield.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dfield.row2 > div { display: flex; flex-direction: column; }
+  .launchpad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lp-opt {
+    display: flex; align-items: center; gap: 10px; padding: 13px 14px; cursor: pointer;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; transition: .15s;
+  }
+  .lp-opt .src-dot { width: 9px; height: 9px; border-radius: 3px; }
+  .lp-opt .lpn { font-weight: 700; font-size: 14px; }
+  .lp-opt .lpd { font-size: 11px; color: var(--text3); }
+  .lp-opt.on { border-color: var(--accent); background: rgba(41,82,227,.08); }
+  .deploy-cta { width: 100%; margin-top: 6px; padding: 15px; border-radius: 13px; background: var(--accent); color: #fff; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; transition: .15s; }
+  .deploy-cta:hover { background: var(--accent2); }
+  .deploy-cta:disabled { opacity: .5; cursor: not-allowed; }
+  .deploy-pre { margin-top: 12px; font-size: 12px; color: var(--text2); text-align: center; display: none; }
+  .deploy-pre.show { display: block; animation: fade .25s ease; }
+
+  /* TOAST */
+  .toasts { position: fixed; right: 18px; bottom: 18px; z-index: 90; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  .toast {
+    display: flex; align-items: center; gap: 11px; pointer-events: auto;
+    background: var(--bg2); border: 1px solid var(--border2); border-left: 3px solid var(--accent);
+    border-radius: 13px; padding: 12px 15px; min-width: 250px; max-width: 320px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.4); animation: toastIn .3s ease;
+  }
+  @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } }
+  .toast.leave { animation: toastOut .3s ease forwards; }
+  @keyframes toastOut { to { transform: translateX(30px); opacity: 0; } }
+  .toast .coin-ico { width: 32px; height: 32px; }
+  .toast .tx { min-width: 0; }
+  .toast .tt { font-size: 12px; color: var(--text2); }
+  .toast .tn { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast .tn .badge { margin-left: 6px; padding: 2px 7px; }
+
+  /* FOOTER */
+  footer { position: relative; z-index: 10; border-top: 1px solid var(--border); padding: 40px 22px; max-width: 1180px; margin: 56px auto 0; }
+  .footer-brand { font-weight: 800; letter-spacing: .14em; margin-bottom: 16px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 20px; }
+  .footer-links a { color: var(--text2); text-decoration: none; font-size: 14px; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { color: var(--text3); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+
+  /* MOBILE BOTTOM BAR */
+  .mobilebar { display: none; }
+  @media (max-width: 820px) {
+    .mobilebar {
+      display: flex; align-items: center; gap: 2px;
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+      padding: 9px 12px calc(9px + env(safe-area-inset-bottom, 0px));
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(16px); border-top: 1px solid var(--border);
+    }
+    .mb-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: none; border: none; color: var(--text2); cursor: pointer;
+      font-family: inherit; font-size: 10px; font-weight: 600; text-decoration: none;
+      padding: 5px 16px; border-radius: 10px;
+    }
+    .mb-item svg { width: 23px; height: 23px; }
+    .mb-item:active { background: var(--bg3); }
+    .mb-item.active { color: var(--accent-light); }
+    .mb-connect {
+      margin-left: auto; background: var(--accent); color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: 700; padding: 12px 20px; border-radius: 999px;
+    }
+    .mb-connect:active { background: var(--accent2); }
+    body { padding-bottom: 78px; }
+  }
+
+  @media (max-width: 820px) {
+    .toasts { right: 12px; left: 12px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); align-items: stretch; }
+    .toast { min-width: 0; max-width: none; margin-left: auto; }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) {
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .topvol { grid-column: 1 / -1; }
+  }
+  @media (max-width: 820px) {
+    .nav-links { display: none; }
+    .nav-btn.launch, .nav-btn.connect { display: none; }
+    .search { margin-left: 0; width: 100%; order: 5; }
+    .board-head { display: none; }
+    .crow {
+      grid-template-columns: 1fr auto; gap: 10px 12px;
+      padding: 14px 16px;
+    }
+    .coin { grid-column: 1; }
+    .crow .srcpill, .crow .badge.col, .crow .cell-mc, .crow .cell-vol, .crow .predict { display: none; }
+    .crow .price { grid-column: 2; grid-row: 1; }
+    .coin-mobile-extra { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; flex-wrap: wrap; }
+    .trade-btn { grid-column: 2; grid-row: 2; align-self: end; }
+  }
+  @media (max-width: 520px) {
+    .stat-row { grid-template-columns: 1fr; }
+    .mk-head { padding-top: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-bg" aria-hidden="true">
+  <div class="glow"></div>
+  <div class="dots"></div>
+  <svg class="flow" viewBox="0 0 1440 220" fill="none" preserveAspectRatio="none">
+    <path d="M0 170 C 240 110, 420 210, 720 150 S 1200 90, 1440 160" stroke="rgba(41,82,227,.18)" stroke-width="1.2"/>
+    <path d="M0 200 C 300 150, 540 230, 860 180 S 1260 130, 1440 190" stroke="rgba(224,132,58,.10)" stroke-width="1.2"/>
+  </svg>
+</div>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <svg viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="7" fill="#2952e3"/>
+      <path d="M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="14" cy="14" r="3.2" fill="none" stroke="white" stroke-width="1.8"/>
+      <circle cx="14" cy="14" r="1.1" fill="white"/>
+    </svg>
+    <span class="nav-logo-text">LENS</span>
+  </a>
+  <div class="nav-links">
+    <a href="/markets" class="active">Markets</a>
+    <a href="/developers">API</a>
+    <a href="/payments">Payments</a>
+    <a href="/staking">Staking</a>
+    <a href="/mcp">Agents</a>
+    <a href="/b20">B20</a>
+    <a href="/community">Community</a>
+    <a href="/lens-docs">Docs</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="nav-btn launch" id="launchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5L3 21l4.5-1.5"/><path d="M14 6s4 0 6 2 2 6 2 6-2.5 4-6 5-7 1-7 1-1.5-3.5 0-7 5-7 5-7z"/><circle cx="14.5" cy="9.5" r="1.6"/></svg>Launch</button>
+    <button class="nav-btn connect" id="connectBtnNav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="3"/><path d="M16 12h2"/><path d="M2 9h16a2 2 0 0 1 2 2"/></svg>Connect</button>
+  </div>
+</nav>
+<!-- LIVE TICKER -->
+<div class="ticker-strip"><div class="ticker-track" id="tickerTrack"></div></div>
+
+<div class="wrap">
+  <header class="mk-head">
+    <div class="eyebrow"><b>LENS</b> // <span class="tag">MARKETS</span><span class="dm" id="dataMode">demo</span></div>
+    <h1>every launch<br><span class="accent">scanned before you ape</span></h1>
+    <p>live Bankr and Clanker launches on Base, each one pre-scanned by LENS so you see the verdict and the price drift in the same row</p>
+  </header>
+
+  <!-- STATS -->
+  <div class="stat-row">
+    <div class="scard blue">
+      <div class="lbl">scanned 24h volume</div>
+      <div class="big" id="statVol">$0</div>
+      <div class="evt"><span class="d"></span> <span id="statEvtSym">TRANSMUTE</span> big buy <b id="statEvtAmt">$557.30</b></div>
+    </div>
+    <div class="scard plain">
+      <div class="lbl">launches scanned today</div>
+      <div class="big" id="statScans">0</div>
+      <div class="evt" style="border-color:rgba(255,90,90,.25)"><span class="d" style="background:var(--red);box-shadow:0 0 0 4px rgba(255,90,90,.16)"></span> <b style="color:var(--red)" id="statStops">0</b>&nbsp;flagged stop</div>
+    </div>
+    <div class="scard topvol">
+      <div class="lbl">top volume <span class="live">live</span></div>
+      <div id="topVolList"></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="seg" id="srcSeg">
+      <button class="on" data-src="all">All</button>
+      <button data-src="bankr"><span class="src-dot bankr"></span>Bankr</button>
+      <button data-src="clanker"><span class="src-dot clanker"></span>Clanker</button>
+    </div>
+    <div class="seg" id="sortSeg">
+      <button class="on" data-sort="trending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4-2 5-2 8a4 4 0 0 0 8 0c0-1-.3-2-1-3 .3 3-1.5 4-2 2 .5-3-2-5-3-7z"/><path d="M8 14a4 4 0 0 0 8 0"/></svg>Trending</button>
+      <button data-sort="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>New</button>
+      <button data-sort="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/></svg>Top</button>
+      <button data-sort="vol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>High vol</button>
+    </div>
+    <div class="seg verdict" id="verdictSeg">
+      <button class="on" data-v="all">All</button>
+      <button data-v="clear">Clear</button>
+      <button data-v="caution">Caution</button>
+      <button data-v="stop">Stop</button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" placeholder="search coin, ticker, CA">
+    </div>
+  </div>
+
+  <!-- BOARD -->
+  <div class="board">
+    <div class="board-head">
+      <div>coin</div>
+      <div>source</div>
+      <div>verdict</div>
+      <div class="r">price</div>
+      <div class="r">mcap</div>
+      <div class="r">prediction</div>
+      <div class="r">trade</div>
+    </div>
+    <div id="boardBody"></div>
+  </div>
+</div>
+
+<!-- TRADE MODAL -->
+<div class="overlay" id="overlay">
+  <div class="swap" id="swap">
+    <div class="swap-head">
+      <div class="swap-title">
+        <img class="coin-ico" id="swapIco" alt="">
+        <div>
+          <div class="t" id="swapName">Coin</div>
+          <div class="s" id="swapSrc">via bankr</div>
+        </div>
+      </div>
+      <button class="swap-x" id="swapClose">✕</button>
+    </div>
+    <div class="swap-verdict" id="swapVerdict"></div>
+    <div class="swap-field">
+      <div class="ft"><span>you pay</span><span id="payBal">balance 0.00</span></div>
+      <div class="fb">
+        <input id="payAmt" inputmode="decimal" placeholder="0">
+        <div class="tok-sel">
+          <select id="payTok"><option value="ETH">ETH</option><option value="USDC">USDC</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="swap-arrow"><span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></div>
+    <div class="swap-field">
+      <div class="ft"><span>you receive</span><span id="recRate">1 = 0</span></div>
+      <div class="fb">
+        <input id="recAmt" placeholder="0" readonly>
+        <div class="tok-sel"><img class="coin-ico" id="swapIco2" alt=""><span id="swapTk">SYM</span></div>
+      </div>
+    </div>
+    <div class="swap-meta">
+      <span>route · <span id="swapRoute">bankr</span></span>
+      <span>price impact · <span id="swapImpact">0.4%</span></span>
+    </div>
+    <button class="swap-cta" id="swapCta">Connect wallet</button>
+    <div class="swap-note" id="swapNote">trading goes live with the LENS terminal, scanner is live now</div>
+  </div>
+</div>
+
+<!-- CONNECT WALLET MODAL -->
+<div class="overlay" id="walletOverlay">
+  <div class="sheet" id="walletSheet">
+    <div class="sheet-head">
+      <span></span>
+      <button class="sheet-x" id="walletClose">✕</button>
+    </div>
+    <div class="sheet-logo">
+      <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#2952e3"/><path d="M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/><circle cx="14" cy="14" r="3.2" fill="none" stroke="white" stroke-width="1.8"/><circle cx="14" cy="14" r="1.1" fill="white"/></svg>
+      <div>
+        <div class="st">Connect to LENS</div>
+        <div class="ss">connect a wallet to trade and deploy on Base</div>
+      </div>
+    </div>
+
+    <button class="wallet-opt" data-wallet="MetaMask">
+      <svg class="wi" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#FFE7D2"/><path d="M10 9l5 3.6-1 2.4L10 12z" fill="#E2761B"/><path d="M24 9l-5 3.6 1 2.4 4-3z" fill="#E2761B"/><path d="M12.5 22l1.5 2 3 .9 3-.9 1.5-2-2-1.4h-5z" fill="#CDBDB2"/><path d="M17 13l-4.5 2.3 1.1 3.2L17 19.6l3.4-1.1 1.1-3.2z" fill="#F6851B"/></svg>
+      MetaMask <span class="wsub">popular</span>
+    </button>
+    <button class="wallet-opt" data-wallet="Coinbase Wallet">
+      <svg class="wi" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#2C5FF6"/><circle cx="17" cy="17" r="8" fill="#fff"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6" fill="#2C5FF6"/></svg>
+      Coinbase Wallet <span class="dotg"></span>
+    </button>
+    <button class="wallet-opt" data-wallet="Rainbow">
+      <svg class="wi" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#0e1118"/><path d="M9 24a13 13 0 0 1 13-13" stroke="#ff5a5a" stroke-width="2.6" fill="none"/><path d="M9 24a9.5 9.5 0 0 1 9.5-9.5" stroke="#e0843a" stroke-width="2.6" fill="none"/><path d="M9 24a6 6 0 0 1 6-6" stroke="#2952e3" stroke-width="2.6" fill="none"/></svg>
+      Rainbow
+    </button>
+    <button class="wallet-opt" data-wallet="WalletConnect">
+      <svg class="wi" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#19222e"/><g stroke="#7aa2ff" stroke-width="2.2" fill="none" stroke-linecap="round"><path d="M11 16c3.3-3.2 8.7-3.2 12 0"/><path d="M13.6 18.6c1.9-1.8 4.9-1.8 6.8 0"/></g></svg>
+      Other wallets
+    </button>
+
+    <div class="sheet-divider">OR</div>
+
+    <button class="wallet-opt" data-wallet="X">
+      <svg class="wi" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#0a0a0a"/><path d="M12 11l10 12M22.4 11L11.6 23" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+      Continue with X
+    </button>
+    <button class="wallet-opt" data-wallet="Email">
+      <svg class="wi" viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="#19222e"/><rect x="10" y="12" width="14" height="10" rx="2" fill="none" stroke="#9fb4d6" stroke-width="1.8"/><path d="M10.6 13.2l6.4 4.8 6.4-4.8" fill="none" stroke="#9fb4d6" stroke-width="1.8"/></svg>
+      Continue with email
+    </button>
+
+    <div class="sheet-terms" id="walletStatus">by connecting you agree to the <a href="/privacy">Terms</a> and <a href="/privacy">Privacy Policy</a></div>
+  </div>
+</div>
+
+<!-- DEPLOY COIN MODAL -->
+<div class="overlay" id="deployOverlay">
+  <div class="sheet" id="deploySheet">
+    <div class="sheet-head">
+      <span></span>
+      <button class="sheet-x" id="deployClose">✕</button>
+    </div>
+    <div class="sheet-logo">
+      <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#2952e3"/><path d="M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/><circle cx="14" cy="14" r="3.2" fill="none" stroke="white" stroke-width="1.8"/><circle cx="14" cy="14" r="1.1" fill="white"/></svg>
+      <div>
+        <div class="st">Launch a coin</div>
+        <div class="ss">deploy on Base, auto-scanned by LENS the moment it lands</div>
+      </div>
+    </div>
+
+    <div class="dfield">
+      <label>launchpad</label>
+      <div class="launchpad" id="launchpad">
+        <div class="lp-opt on" data-lp="bankr"><span class="src-dot bankr"></span><div><div class="lpn">Bankr</div><div class="lpd">bankrbot launch</div></div></div>
+        <div class="lp-opt" data-lp="clanker"><span class="src-dot clanker"></span><div><div class="lpn">Clanker</div><div class="lpd">clanker launch</div></div></div>
+      </div>
+    </div>
+    <div class="dfield row2">
+      <div><label>coin name</label><input id="dName" placeholder="Aether Network"></div>
+      <div><label>ticker</label><input id="dTk" placeholder="AETHER" maxlength="10"></div>
+    </div>
+    <div class="dfield"><label>image url</label><input id="dImg" placeholder="https://"></div>
+    <div class="dfield"><label>description</label><textarea id="dDesc" placeholder="what is this coin"></textarea></div>
+    <div class="dfield"><label>your first buy (optional)</label><input id="dBuy" inputmode="decimal" placeholder="0.0 ETH"></div>
+
+    <button class="deploy-cta" id="deployCta">Deploy on Base</button>
+    <div class="deploy-pre" id="deployPre">deploys go live with the LENS terminal, the scanner is live now</div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- MOBILE BOTTOM BAR -->
+<div class="mobilebar">
+  <a href="/" class="mb-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-5h5v5"/></svg>
+    <span>Home</span>
+  </a>
+  <button class="mb-item active" id="mbSearch">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <span>Search</span>
+  </button>
+  <button class="mb-item" id="mbDeploy">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+    <span>Deploy</span>
+  </button>
+  <button class="mb-connect" id="mbConnect">Connect wallet</button>
+</div>
+
+<footer>
+  <div class="footer-brand">LENS</div>
+  <div class="footer-links">
+    <a href="/markets">Markets</a>
+    <a href="/developers">API</a>
+    <a href="/staking">Staking</a>
+    <a href="/mcp">Agents</a>
+    <a href="/b20">B20</a>
+    <a href="/lens-docs">Docs</a>
+    <a href="/community">Community</a>
+    <a href="/privacy">Privacy</a>
+    <a href="https://x.com/lnsx_io" target="_blank" rel="noopener">Twitter</a>
+  </div>
+  <div class="footer-copy">2026 LENS · bios lie, chains don't</div>
+</footer>
+
+<script>
+/* ---------- theme ---------- */
+(function(){
+  const root = document.documentElement;
+  const themeIcon = document.getElementById('themeIcon');
+  const moon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  const sun = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  function sync(){ themeIcon.innerHTML = root.classList.contains('light') ? moon : sun; }
+  let saved = null; try { saved = localStorage.getItem('lens-theme'); } catch(e){}
+  if (saved === 'light') root.classList.add('light');
+  sync();
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    root.classList.toggle('light');
+    try { localStorage.setItem('lens-theme', root.classList.contains('light') ? 'light' : 'dark'); } catch(e){}
+    sync();
+  });
+})();
+
+/* ---------- helpers ---------- */
+const rnd = (a,b) => a + Math.random()*(b-a);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function fmtUsd(n){
+  if (n >= 1e6) return '$'+(n/1e6).toFixed(2)+'M';
+  if (n >= 1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+n.toFixed(0);
+}
+function fmtPrice(p){
+  if (p >= 1) return '$'+p.toFixed(3);
+  if (p >= 0.01) return '$'+p.toFixed(4);
+  return '$'+p.toFixed(6);
+}
+function ico(seed, c1, c2, label){
+  // gradient orb + ticker letter + a varied motif, deterministic by seed
+  const s = 'g'+Math.abs(seed)%99999;
+  const L = ((label||'').toString().replace(/[^A-Za-z0-9]/g,'').charAt(0)||'?').toUpperCase();
+  const motifs = [
+    "<circle cx='40' cy='40' r='25' fill='none' stroke='rgba(255,255,255,.20)' stroke-width='2'/>",
+    "<path d='M14 50 L28 32 L40 44 L52 24 L66 40' fill='none' stroke='rgba(255,255,255,.22)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>",
+    "<g fill='rgba(255,255,255,.16)'><circle cx='24' cy='24' r='3'/><circle cx='40' cy='24' r='3'/><circle cx='56' cy='24' r='3'/><circle cx='24' cy='40' r='3'/><circle cx='56' cy='40' r='3'/><circle cx='24' cy='56' r='3'/><circle cx='40' cy='56' r='3'/><circle cx='56' cy='56' r='3'/></g>",
+    "<path d='M40 13 L64 54 L16 54 Z' fill='none' stroke='rgba(255,255,255,.20)' stroke-width='2.4' stroke-linejoin='round'/>",
+    "<path d='M45 11 L23 43 H39 L35 69 L59 33 H43 Z' fill='rgba(255,255,255,.20)'/>",
+    "<path d='M40 14 L62 27 V53 L40 66 L18 53 V27 Z' fill='none' stroke='rgba(255,255,255,.20)' stroke-width='2.4' stroke-linejoin='round'/>",
+    "<path d='M12 46 Q26 28 40 46 T68 46' fill='none' stroke='rgba(255,255,255,.22)' stroke-width='3' stroke-linecap='round'/>",
+    "<g stroke='rgba(255,255,255,.18)' stroke-width='2.6' fill='none'><circle cx='40' cy='40' r='11'/><circle cx='40' cy='40' r='22'/></g>",
+    "<path d='M40 12 L48 32 L68 40 L48 48 L40 68 L32 48 L12 40 L32 32 Z' fill='rgba(255,255,255,.16)'/>",
+    "<g stroke='rgba(255,255,255,.20)' stroke-width='2.6' stroke-linecap='round'><path d='M22 28 H58'/><path d='M22 40 H58'/><path d='M22 52 H46'/></g>"
+  ];
+  const m = motifs[Math.abs(seed)%motifs.length];
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><defs><linearGradient id='"+s+"' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='"+c1+"'/><stop offset='1' stop-color='"+c2+"'/></linearGradient></defs><rect width='80' height='80' rx='40' fill='url(#"+s+")'/>"+m+"<text x='40' y='41' text-anchor='middle' dominant-baseline='central' font-family='Inter,Segoe UI,Arial,sans-serif' font-weight='800' font-size='33' fill='rgba(255,255,255,.97)'>"+L+"</text></svg>";
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+}
+const palettes = [['#2952e3','#4a72ff'],['#e0843a','#ffb066'],['#2ecc71','#1f9d57'],['#9b59ff','#5e3ac4'],['#ff5a8a','#c43a6a'],['#22b8cf','#1a7d8c'],['#f0f0f0','#888'],['#ff7b3a','#e0432a']];
+
+/* ====================================================================
+   LIVE DATA CONFIG  —  fill this in to go from demo to real onchain data
+   ==================================================================== */
+const CONFIG = {
+  // LENS verdict API (public, no key). swap to https://api.lnsx.io if you prefer
+  LENS_API: 'https://lens-liard.vercel.app',
+
+  // your deploy router (api/deploy.js). live:
+  DEPLOY_API: 'https://lens-liard.vercel.app/api/deploy',
+
+  // OPTIONAL but recommended — one backend endpoint (api/markets.js) that returns
+  // ready coins (Bankr launches + DexScreener price + LENS verdict) from the server,
+  // so the browser never hits a CORS wall. set after uploading api/markets.js:
+  // 'https://lens-liard.vercel.app/api/markets' (or '/api/markets' if same domain)
+  MARKETS_API: '',
+
+  // OPTION A — auto pull recent launches from your Supabase bankr_launches.
+  // fill BOTH with your project url + the ANON (public) key, never the service key
+  SUPABASE_URL: '',                 // e.g. https://irtfaxhvphjtqczswrck.supabase.co
+  SUPABASE_ANON_KEY: '',
+  SUPABASE_TABLE: 'bankr_launches',
+  SUPABASE_ADDR_COL: 'token_address',
+  SUPABASE_SRC_COL: 'source',
+
+  // OPTION B — or hardcode Base token addresses to track
+  // [{ address: '0x...', src: 'bankr' }, { address: '0x...', src: 'clanker' }]
+  SEED: [],
+
+  // OPTION C (default, no key) — pull the latest Bankr launches from the public endpoint
+  BANKR_PUBLIC: true,
+  BANKR_LAUNCHES_URL: 'https://api.bankr.bot/token-launches',
+
+  MAX: 30,
+  PRICE_REFRESH_MS: 20000
+};
+let DEMO = true;
+
+function setDataMode(){
+  const el = document.getElementById('dataMode');
+  if (DEMO){ el.textContent = 'demo'; el.classList.remove('live'); }
+  else { el.textContent = 'live · onchain'; el.classList.add('live'); }
+}
+function normVerdict(v){
+  v = String(v||'').toLowerCase();
+  if (v.includes('stop')) return 'stop';
+  if (v.includes('caution') || v.includes('warn') || v.includes('risk')) return 'caution';
+  if (v.includes('clear') || v.includes('safe') || v.includes('ok')) return 'clear';
+  return 'caution';
+}
+async function fetchBankrLaunches(){
+  try {
+    const r = await fetch(CONFIG.BANKR_LAUNCHES_URL);
+    if (!r.ok) return [];
+    const j = await r.json();
+    const arr = Array.isArray(j) ? j : (j.launches || j.data || j.results || j.tokens || j.tokenLaunches || []);
+    const pickAddr = o => o.tokenAddress || o.address || o.token_address || o.contractAddress || o.ca || (o.token && (o.token.address || o.token.tokenAddress)) || null;
+    return arr.map(o => {
+      const a = pickAddr(o);
+      if (!a) return null;
+      return {
+        address: String(a), src: 'bankr',
+        name: o.name || o.tokenName || (o.token && o.token.name) || null,
+        sym: o.symbol || o.tokenSymbol || (o.token && o.token.symbol) || null,
+        img: o.image || o.imageUrl || o.logo || (o.token && (o.token.image || o.token.imageUrl)) || null
+      };
+    }).filter(Boolean).slice(0, CONFIG.MAX);
+  } catch(e){ return []; }
+}
+async function loadAddresses(){
+  // explicit seed wins
+  if ((CONFIG.SEED||[]).length) return CONFIG.SEED.slice(0, CONFIG.MAX);
+  // then your Supabase bankr_launches
+  if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY){
+    try {
+      const u = `${CONFIG.SUPABASE_URL}/rest/v1/${CONFIG.SUPABASE_TABLE}?select=${CONFIG.SUPABASE_ADDR_COL},${CONFIG.SUPABASE_SRC_COL}&order=created_at.desc&limit=${CONFIG.MAX}`;
+      const r = await fetch(u, { headers: { apikey: CONFIG.SUPABASE_ANON_KEY, Authorization: 'Bearer '+CONFIG.SUPABASE_ANON_KEY } });
+      if (r.ok){
+        const rows = await r.json();
+        const out = rows.map(x=>({ address: x[CONFIG.SUPABASE_ADDR_COL], src: String(x[CONFIG.SUPABASE_SRC_COL]||'bankr').toLowerCase().includes('clank')?'clanker':'bankr' })).filter(x=>x.address);
+        if (out.length) return out;
+      }
+    } catch(e){}
+  }
+  // then the public Bankr launches feed (no key)
+  if (CONFIG.BANKR_PUBLIC){
+    const b = await fetchBankrLaunches();
+    if (b.length) return b;
+  }
+  return [];
+}
+async function fetchDex(addrs){
+  const map = {};
+  if (!addrs.length) return map;
+  try {
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+addrs.join(','));
+    const j = await r.json();
+    (j.pairs||[]).forEach(p=>{
+      if (p.chainId !== 'base') return;
+      const a = (p.baseToken.address||'').toLowerCase();
+      const liq = (p.liquidity && p.liquidity.usd) || 0;
+      if (!map[a] || liq > map[a]._liq){
+        map[a] = {
+          _liq: liq,
+          name: p.baseToken.name, sym: p.baseToken.symbol,
+          price: parseFloat(p.priceUsd)||0,
+          mcap: p.marketCap || p.fdv || 0,
+          vol24: (p.volume && p.volume.h24) || 0,
+          ch24: (p.priceChange && p.priceChange.h24) || 0,
+          img: (p.info && p.info.imageUrl) || null,
+          url: p.url
+        };
+      }
+    });
+  } catch(e){}
+  return map;
+}
+async function fetchVerdict(target){
+  try {
+    const r = await fetch(`${CONFIG.LENS_API}/api/lookup?username=${encodeURIComponent(target)}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const v = j.verdict || (j.read && j.read.verdict);
+    if (!v) return null;
+    return { verdict: normVerdict(v), trust: (j.trust != null ? j.trust : (j.read && j.read.trust)) };
+  } catch(e){ return null; }
+}
+function dexToCoin(addr, src, d){
+  const spark = [];
+  let start = d.price / (1 + (d.ch24/100 || 0)); if (!isFinite(start) || start<=0) start = d.price;
+  const step = (d.price - start) / 23;
+  for (let i=0;i<24;i++) spark.push(Math.max(1e-12, start + step*i + start*rnd(-0.008,0.008)));
+  return {
+    address: addr, sym: d.sym||'?', name: d.name||d.sym||'token', src,
+    verdict: 'caution', trust: null,
+    price: d.price, mcap: d.mcap||0, vol24: d.vol24||0, ch24: d.ch24||0,
+    img: d.img, url: d.url, spark, born: Date.now(), live: true
+  };
+}
+async function loadLive(){
+  // preferred path: one server endpoint returns ready coins (no browser CORS issues)
+  if (CONFIG.MARKETS_API){
+    try {
+      const r = await fetch(CONFIG.MARKETS_API);
+      if (r.ok){
+        const rows = await r.json();
+        const arr = Array.isArray(rows) ? rows : (rows.coins || rows.data || []);
+        const coins = arr.filter(x=>x && x.address && x.price).map(x=>{
+          const spark=[]; let st=(x.price/(1+((x.ch24||0)/100)))||x.price; const step=(x.price-st)/23;
+          for(let i=0;i<24;i++) spark.push(Math.max(1e-12, st+step*i));
+          return { address:String(x.address).toLowerCase(), sym:x.sym||x.symbol||'?', name:x.name||x.sym||'token',
+            src:(String(x.src||'bankr').includes('clank')?'clanker':'bankr'), verdict:normVerdict(x.verdict), trust:(x.trust!=null?x.trust:null),
+            price:x.price, mcap:x.mcap||0, vol24:x.vol24||0, ch24:x.ch24||0, img:x.img||null, url:x.url||null, spark, born:Date.now(), live:true };
+        });
+        if (coins.length){ COINS=coins; DEMO=false; setDataMode(); buildTicker(); refreshStats(); refreshTopVol(); render(); return true; }
+      }
+    } catch(e){}
+    // if the proxy fails, fall through to the direct path below
+  }
+
+  const list = await loadAddresses();
+  if (!list.length) return false;
+  const addrs = list.map(x=>String(x.address).toLowerCase());
+  const dex = await fetchDex(addrs);
+  const found = list.filter(x=>dex[String(x.address).toLowerCase()]);
+  if (!found.length) return false;
+  COINS = found.map(x=>{
+    const a = String(x.address).toLowerCase();
+    const c = dexToCoin(a, x.src, dex[a]);
+    if ((!c.name || c.name==='token' || c.name===c.sym) && x.name) c.name = x.name;
+    if ((!c.sym || c.sym==='?') && x.sym) c.sym = x.sym;
+    if (!c.img && x.img) c.img = x.img;
+    return c;
+  });
+  DEMO = false; setDataMode();
+  buildTicker(); refreshStats(); refreshTopVol(); render();
+  // verdicts fill in async, best effort
+  found.forEach(async x=>{
+    const a = String(x.address).toLowerCase();
+    const v = await fetchVerdict(a);
+    const c = COINS.find(k=>k.address===a);
+    if (c && v){ c.verdict = v.verdict; c.trust = v.trust; render(); refreshStats(); refreshTopVol(); }
+  });
+  return true;
+}
+async function pollPrices(){
+  if (DEMO) return;
+  const dex = await fetchDex(COINS.map(c=>c.address));
+  COINS.forEach(c=>{
+    const d = dex[c.address]; if(!d) return;
+    if (d.price && d.price!==c.price){ c.spark.push(d.price); if(c.spark.length>24) c.spark.shift(); }
+    c.price = d.price||c.price; c.mcap = d.mcap||c.mcap; c.vol24 = d.vol24!=null?d.vol24:c.vol24; c.ch24 = d.ch24!=null?d.ch24:c.ch24;
+  });
+  render(); refreshStats(); refreshTopVol();
+}
+
+/* ---------- coin model ---------- */
+const NAMES = [
+  ['TRANSMUTE','Transmute'],['ROASTR','Roastr'],['LUMEN','Lumen Labs'],['REPTILIAN','Reptilian'],
+  ['GLIPPY','Glippy'],['GROVA','Grova Agent'],['BMINE','Base Miner'],['GMEOW','Gmeow'],
+  ['LIBERTY','Liberty Monolith'],['SUMI','Sumimaseng'],['REALM','Realm TCG'],['BERT','Bert'],
+  ['BASE','Base Tap'],['FORGE','BaseForge'],['ODAI','Open DAI'],['MLTL','Metal'],
+  ['VIRES','Vires'],['ATHENA','Athena'],['NOVA','Nova Index'],['KILN','Kiln Protocol']
+];
+const PENDING = [
+  ['ZENITH','Zenith Labs'],['PULSE','Pulsechain Ape'],['ORACLE','Oracle Mind'],['FLUX','Fluxnet'],
+  ['DRIP','Dripfeed'],['VANTA','Vanta Black'],['ECHO','Echo Agent'],['QUILL','Quill AI'],
+  ['MIRAGE','Mirage'],['HALO','Halo Protocol'],['RIFT','Riftbound'],['CINDER','Cinder']
+];
+
+function makeCoin(name, sym, idx){
+  const pal = palettes[idx % palettes.length];
+  const r = Math.random();
+  const verdict = r < 0.52 ? 'clear' : (r < 0.82 ? 'caution' : 'stop');
+  const price = rnd(0.00002, 0.0009);
+  const mcap = rnd(9.5e3, 1.0e6);
+  const vol = rnd(0, 14e3) * (verdict==='clear'?1.3:1);
+  const spark = [];
+  let sp = price;
+  for (let i=0;i<24;i++){ sp *= (1+rnd(-0.05,0.05)); spark.push(sp); }
+  return {
+    sym, name, src: Math.random()<0.55?'bankr':'clanker', verdict,
+    price, mcap, vol24: vol, ch24: rnd(-22,40),
+    spark, born: Date.now() - rnd(0, 36e5)
+  };
+}
+let COINS = NAMES.map((n,i)=>makeCoin(n[1],n[0],i));
+
+/* ---------- prediction ---------- */
+function predict(c){
+  // simple momentum read over the sparkline tail -> direction + confidence
+  const s = c.spark, n = s.length;
+  let up=0, dn=0;
+  for (let i=Math.max(1,n-8);i<n;i++){ if (s[i]>s[i-1]) up++; else dn++; }
+  const dir = up >= dn ? 'up' : 'down';
+  const conf = Math.round(50 + Math.abs(up-dn)/Math.max(1,(up+dn)) * 40 + rnd(0,6));
+  return { dir, conf: Math.min(96, conf) };
+}
+function sparkPath(s, w, h){
+  const mn = Math.min(...s), mx = Math.max(...s), rng = (mx-mn)||1;
+  return s.map((v,i)=>{
+    const x = (i/(s.length-1))*w;
+    const y = h - ((v-mn)/rng)*(h-3) - 1.5;
+    return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+  }).join(' ');
+}
+
+/* ---------- render board ---------- */
+let state = { src:'all', sort:'trending', verdict:'all', q:'' };
+const body = document.getElementById('boardBody');
+
+function visibleCoins(){
+  let list = COINS.slice();
+  if (state.src !== 'all') list = list.filter(c=>c.src===state.src);
+  if (state.verdict !== 'all') list = list.filter(c=>c.verdict===state.verdict);
+  if (state.q){ const q=state.q.toLowerCase(); list = list.filter(c=>c.sym.toLowerCase().includes(q)||c.name.toLowerCase().includes(q)); }
+  if (state.sort==='top') list.sort((a,b)=>b.mcap-a.mcap);
+  else if (state.sort==='vol') list.sort((a,b)=>b.vol24-a.vol24);
+  else if (state.sort==='new') list.sort((a,b)=>b.born-a.born);
+  else list.sort((a,b)=>b.vol24*b.price - a.vol24*a.price);
+  return list;
+}
+
+function rowHtml(c, i){
+  const p = predict(c);
+  const ch = c.ch24;
+  const pal = palettes[i % palettes.length];
+  return `<div class="crow" data-sym="${c.sym}">
+    <div class="coin">
+      <img class="coin-ico" src="${c.img || ico(i, pal[0], pal[1], c.sym)}" onerror="this.onerror=null;this.src='${ico(i, pal[0], pal[1], c.sym)}'" alt="">
+      <div class="coin-meta">
+        <div class="coin-name">${c.name}</div>
+        <div class="coin-sub"><span class="coin-tk">$${c.sym}</span> · <span>${c.src}</span></div>
+      </div>
+    </div>
+    <div><span class="srcpill"><span class="src-dot ${c.src}"></span>${c.src}</span></div>
+    <div><span class="badge col ${c.verdict}">${c.verdict.toUpperCase()}</span></div>
+    <div class="price">
+      <div class="p" data-price>${fmtPrice(c.price)}</div>
+      <div class="c ${ch>=0?'up':'down'}">${ch>=0?'+':''}${ch.toFixed(1)}%</div>
+    </div>
+    <div class="cell-r cell-mc">${fmtUsd(c.mcap)}</div>
+    <div class="predict">
+      <svg class="spark" viewBox="0 0 56 24"><path d="${sparkPath(c.spark,56,24)}" fill="none" stroke="${p.dir==='up'?'var(--green)':'var(--red)'}" stroke-width="1.4"/></svg>
+      <span class="pchip ${p.dir}">${p.dir==='up'?'↑':'↓'} ${p.conf}%</span>
+    </div>
+    <button class="trade-btn" data-trade="${c.sym}">Trade</button>
+    <div class="coin-mobile-extra">
+      <span class="srcpill"><span class="src-dot ${c.src}"></span>${c.src}</span>
+      <span class="badge ${c.verdict}">${c.verdict.toUpperCase()}</span>
+      <span class="pchip ${p.dir}">${p.dir==='up'?'↑':'↓'} ${p.conf}%</span>
+      <span class="cell-r">mc ${fmtUsd(c.mcap)}</span>
+    </div>
+  </div>`;
+}
+
+function render(){
+  const list = visibleCoins();
+  body.innerHTML = list.map((c,i)=>rowHtml(c,i)).join('') || `<div style="padding:34px 20px;text-align:center;color:var(--text3)">no coins match that filter, try widening it</div>`;
+  bindTrade();
+}
+
+/* ---------- live tick ---------- */
+function tick(){
+  COINS.forEach(c=>{
+    const drift = rnd(-0.018, 0.02);
+    c.price *= (1+drift);
+    c.ch24 = Math.max(-95, c.ch24 + drift*100*rnd(.3,.8));
+    c.spark.push(c.price); if (c.spark.length>24) c.spark.shift();
+    c.vol24 = Math.max(0, c.vol24 + rnd(-120, 240));
+  });
+  // update only visible price cells in place (no full rerender, keeps it smooth)
+  document.querySelectorAll('.crow').forEach(row=>{
+    const c = COINS.find(x=>x.sym===row.dataset.sym); if(!c) return;
+    const pEl = row.querySelector('[data-price]');
+    const old = pEl.textContent; const next = fmtPrice(c.price);
+    if (next!==old){
+      pEl.textContent = next;
+      pEl.classList.remove('flash-up','flash-down');
+      void pEl.offsetWidth;
+      pEl.classList.add(c.price>=0 && next>old ? 'flash-up' : 'flash-down');
+    }
+    const cEl = row.querySelector('.price .c');
+    cEl.textContent = (c.ch24>=0?'+':'')+c.ch24.toFixed(1)+'%';
+    cEl.className = 'c '+(c.ch24>=0?'up':'down');
+  });
+  refreshStats();
+  refreshTopVol();
+}
+
+/* ---------- stats ---------- */
+function refreshStats(){
+  const vol = COINS.reduce((s,c)=>s+c.vol24,0);
+  document.getElementById('statVol').textContent = fmtUsd(vol);
+  document.getElementById('statScans').textContent = COINS.length;
+  document.getElementById('statStops').textContent = COINS.filter(c=>c.verdict==='stop').length;
+}
+function refreshTopVol(){
+  const top = COINS.slice().sort((a,b)=>b.vol24-a.vol24).slice(0,3);
+  document.getElementById('topVolList').innerHTML = top.map((c,i)=>{
+    const pal = palettes[i%palettes.length];
+    return `<div class="tv-row"><img class="tv-ico" src="${ico(i+30,pal[0],pal[1],c.sym)}" alt=""><span class="tv-sym">$${c.sym}</span><span class="tv-mc">${fmtUsd(c.mcap)}</span><span class="tv-vol">${fmtUsd(c.vol24)}</span></div>`;
+  }).join('');
+}
+
+/* ---------- ticker ---------- */
+function buildTicker(){
+  const items = COINS.slice(0,10).map((c,i)=>{
+    const side = Math.random()<0.5;
+    const pal = palettes[i%palettes.length];
+    return `<span class="tk"><img class="tk-ico" src="${ico(i+10,pal[0],pal[1],c.sym)}" alt=""><span class="tk-sym">$${c.sym}</span><span class="tk-ca">${c.src}</span><span class="tk-move ${side?'up':'down'}">${side?'Buy':'Sell'} ${fmtUsd(rnd(5,720))}</span></span>`;
+  }).join('');
+  document.getElementById('tickerTrack').innerHTML = items + items;
+}
+
+/* ---------- new coin feed ---------- */
+const toasts = document.getElementById('toasts');
+function newCoin(){
+  if (PENDING.length===0) return;
+  const idx = Math.floor(Math.random()*PENDING.length);
+  const [sym,name] = PENDING.splice(idx,1)[0];
+  const c = makeCoin(name, sym, COINS.length);
+  c.born = Date.now();
+  COINS.unshift(c);
+  // toast
+  const pal = pick(palettes);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<img class="coin-ico" src="${ico(COINS.length,pal[0],pal[1],c.sym)}" alt="">
+    <div class="tx"><div class="tt">new on ${c.src} · scanned</div>
+    <div class="tn">$${c.sym}<span class="badge ${c.verdict}">${c.verdict.toUpperCase()}</span></div></div>`;
+  toasts.appendChild(t);
+  setTimeout(()=>{ t.classList.add('leave'); setTimeout(()=>t.remove(),300); }, 5200);
+  // if board shows new/trending and no filter excludes it, prepend with fresh anim
+  if (state.q==='' && (state.src==='all'||state.src===c.src) && (state.verdict==='all'||state.verdict===c.verdict)){
+    render();
+    const first = body.querySelector('.crow'); if (first) first.classList.add('fresh');
+  }
+}
+
+/* ---------- trade modal ---------- */
+const overlay = document.getElementById('overlay');
+let activeCoin = null;
+const verdictCopy = {
+  clear:'CLEAR · deployer history checks out, no red lines tripped',
+  caution:'CAUTION · some red lines tripped, size small and watch the deployer',
+  stop:'STOP · deployer pattern matches known rugs, LENS recommends staying out'
+};
+function openSwap(sym){
+  const c = COINS.find(x=>x.sym===sym); if(!c) return;
+  activeCoin = c;
+  const i = COINS.indexOf(c); const pal = palettes[i%palettes.length];
+  const fallback = ico(i,pal[0],pal[1],c.sym);
+  const img = c.img || fallback;
+  const ico1 = document.getElementById('swapIco'); ico1.src = img; ico1.onerror = ()=>{ ico1.onerror=null; ico1.src=fallback; };
+  const ico2 = document.getElementById('swapIco2'); ico2.src = img; ico2.onerror = ()=>{ ico2.onerror=null; ico2.src=fallback; };
+  document.getElementById('swapName').textContent = c.name;
+  document.getElementById('swapSrc').textContent = 'via '+c.src;
+  document.getElementById('swapTk').textContent = c.sym;
+  document.getElementById('swapRoute').textContent = c.src;
+  document.getElementById('swapImpact').textContent = (rnd(0.2,1.4)).toFixed(1)+'%';
+  const v = document.getElementById('swapVerdict');
+  v.className = 'swap-verdict '+c.verdict;
+  v.textContent = verdictCopy[c.verdict] + (c.trust!=null ? '  ·  trust '+c.trust : '');
+  document.getElementById('swapCta').textContent = account ? 'Swap on Base' : 'Connect wallet';
+  document.getElementById('payAmt').value = '';
+  document.getElementById('recAmt').value = '';
+  document.getElementById('swapNote').classList.remove('show');
+  calcSwap();
+  overlay.classList.add('open');
+}
+function closeSwap(){ overlay.classList.remove('open'); }
+function calcSwap(){
+  if (!activeCoin) return;
+  const payUsd = document.getElementById('payTok').value==='ETH' ? 3400 : 1;
+  const amt = parseFloat(document.getElementById('payAmt').value)||0;
+  const out = amt * payUsd / activeCoin.price;
+  document.getElementById('recAmt').value = out ? out.toLocaleString(undefined,{maximumFractionDigits:0}) : '';
+  document.getElementById('recRate').textContent = '1 '+document.getElementById('payTok').value+' = '+(payUsd/activeCoin.price).toLocaleString(undefined,{maximumFractionDigits:0})+' '+activeCoin.sym;
+}
+document.getElementById('swapClose').addEventListener('click', closeSwap);
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeSwap(); });
+document.getElementById('payAmt').addEventListener('input', function(){
+  this.value = this.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1'); calcSwap();
+});
+document.getElementById('payTok').addEventListener('change', calcSwap);
+document.getElementById('swapCta').addEventListener('click', function(){
+  if (!account){ openWallet(); return; }
+  document.getElementById('swapNote').classList.add('show');
+});
+
+/* ---------- connect wallet modal ---------- */
+const walletOverlay = document.getElementById('walletOverlay');
+const walletStatus = document.getElementById('walletStatus');
+const walletStatusDefault = walletStatus.innerHTML;
+function openWallet(){ if(!account) walletStatus.innerHTML = walletStatusDefault; walletOverlay.classList.add('open'); }
+function closeWallet(){ walletOverlay.classList.remove('open'); }
+document.getElementById('connectBtnNav').addEventListener('click', openWallet);
+document.getElementById('walletClose').addEventListener('click', closeWallet);
+walletOverlay.addEventListener('click', e=>{ if(e.target===walletOverlay) closeWallet(); });
+
+let account = null;
+function shortAddr(a){ return a.slice(0,6)+'…'+a.slice(-4); }
+function setConnectedUI(){
+  const nav = document.getElementById('connectBtnNav');
+  const svg = nav.querySelector('svg').outerHTML;
+  nav.innerHTML = svg + (account ? shortAddr(account) : 'Connect');
+  document.getElementById('mbConnect').textContent = account ? shortAddr(account) : 'Connect wallet';
+}
+function getProvider(name){
+  const eth = window.ethereum;
+  if (!eth) return null;
+  // pick a specific injected provider when several are present
+  const list = eth.providers || [eth];
+  if (name === 'Coinbase Wallet'){ return list.find(p=>p.isCoinbaseWallet) || eth; }
+  if (name === 'MetaMask'){ return list.find(p=>p.isMetaMask) || eth; }
+  if (name === 'Rainbow'){ return list.find(p=>p.isRainbow) || eth; }
+  return eth;
+}
+async function connectInjected(name){
+  const prov = getProvider(name);
+  if (!prov){
+    walletStatus.innerHTML = 'no browser wallet detected, install '+name+' or open lnsx.io inside your wallet app';
+    return;
+  }
+  try {
+    walletStatus.innerHTML = 'connecting to '+name+' ...';
+    const accts = await prov.request({ method: 'eth_requestAccounts' });
+    account = accts && accts[0];
+    if (!account){ walletStatus.innerHTML = 'no account returned'; return; }
+    // make sure we are on Base (0x2105)
+    try {
+      await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] });
+    } catch (sw){
+      if (sw && sw.code === 4902){
+        try { await prov.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x2105', chainName: 'Base', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org'] }] }); } catch(e){}
+      }
+    }
+    setConnectedUI();
+    walletStatus.innerHTML = 'connected '+shortAddr(account)+' on Base';
+    if (prov.on) prov.on('accountsChanged', a=>{ account = (a&&a[0])||null; setConnectedUI(); });
+    setTimeout(closeWallet, 800);
+  } catch (e){
+    walletStatus.innerHTML = (e && e.code === 4001) ? 'connection cancelled' : 'connection failed, try again';
+  }
+}
+document.querySelectorAll('.wallet-opt').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const name = b.dataset.wallet;
+    if (name === 'X' || name === 'Email'){
+      walletStatus.innerHTML = name+' login needs the Privy SDK, wallet connect is live now';
+      return;
+    }
+    connectInjected(name);
+  });
+});
+
+/* ---------- deploy coin modal ---------- */
+const deployOverlay = document.getElementById('deployOverlay');
+function openDeploy(){ document.getElementById('deployPre').classList.remove('show'); deployOverlay.classList.add('open'); }
+function closeDeploy(){ deployOverlay.classList.remove('open'); }
+document.getElementById('launchBtn').addEventListener('click', openDeploy);
+document.getElementById('deployClose').addEventListener('click', closeDeploy);
+deployOverlay.addEventListener('click', e=>{ if(e.target===deployOverlay) closeDeploy(); });
+document.getElementById('launchpad').addEventListener('click', e=>{
+  const opt = e.target.closest('.lp-opt'); if(!opt) return;
+  document.querySelectorAll('#launchpad .lp-opt').forEach(x=>x.classList.remove('on'));
+  opt.classList.add('on');
+});
+document.getElementById('dTk').addEventListener('input', function(){ this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+document.getElementById('deployCta').addEventListener('click', doDeploy);
+
+async function doDeploy(){
+  if (!account){ closeDeploy(); openWallet(); return; }
+  const name = document.getElementById('dName').value.trim();
+  const symbol = document.getElementById('dTk').value.trim();
+  const image = document.getElementById('dImg').value.trim();
+  const description = document.getElementById('dDesc').value.trim();
+  const lp = (document.querySelector('#launchpad .lp-opt.on')||{}).dataset?.lp || 'bankr';
+  const pre = document.getElementById('deployPre');
+  const cta = document.getElementById('deployCta');
+
+  if (!name || !symbol){ pre.textContent = 'coin name and ticker are required'; pre.classList.add('show'); return; }
+
+  pre.classList.remove('show');
+  cta.disabled = true; const orig = cta.textContent; cta.textContent = 'deploying on '+lp+' ...';
+  try {
+    let address = null;
+
+    if (lp === 'clanker' && !CONFIG.DEPLOY_API){
+      // no API key needed: deploy on-chain with the connected wallet via clanker-sdk
+      if (typeof window.__clankerDeploy !== 'function') throw new Error('clanker SDK still loading, try again in a moment');
+      cta.textContent = 'confirm in your wallet ...';
+      const out = await window.__clankerDeploy({ name, symbol, image, description, tokenAdmin: account });
+      address = out.address;
+    } else {
+      // bankr (or clanker with a hosted API key) routes through your backend
+      if (!CONFIG.DEPLOY_API) throw new Error('NEEDS_BACKEND');
+      const r = await fetch(CONFIG.DEPLOY_API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ launchpad: lp, name, symbol, image, description, creator: account })
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error || 'deploy failed');
+      address = data.address;
+    }
+
+    onDeployed({ name, symbol, src: lp, address, img: image });
+    cta.textContent = 'deployed ✓';
+    setTimeout(()=>{ closeDeploy(); cta.disabled = false; cta.textContent = orig; }, 1300);
+  } catch(e){
+    const msg = (e && e.message) || String(e);
+    if (msg === 'NEEDS_BACKEND') pre.textContent = 'Bankr needs api/deploy.js + BANKR_PARTNER_KEY. Clanker deploys on-chain with no key';
+    else if (/user rejected|denied|4001/i.test(msg)) pre.textContent = 'transaction cancelled';
+    else pre.textContent = 'deploy failed: '+msg;
+    pre.classList.add('show');
+    cta.disabled = false; cta.textContent = orig;
+  }
+}
+
+// drop a freshly launched coin into the board, then enrich with real price + verdict
+function onDeployed(info){
+  const addr = (info.address || '').toLowerCase();
+  const c = {
+    address: addr, sym: info.symbol, name: info.name, src: info.src,
+    verdict: 'clear', trust: null,
+    price: 0, mcap: 0, vol24: 0, ch24: 0,
+    img: info.img || null, spark: Array(24).fill(0.0000001),
+    born: Date.now(), live: !DEMO, mine: true, url: info.src==='clanker' ? 'https://clanker.world' : 'https://bankr.bot'
+  };
+  COINS.unshift(c);
+  // surface it: newest first, clear filters, scroll to the board
+  state.sort = 'new'; state.src = 'all'; state.verdict = 'all'; state.q = '';
+  document.querySelectorAll('#sortSeg button').forEach(x=>x.classList.toggle('on', x.dataset.sort==='new'));
+  document.querySelectorAll('#srcSeg button').forEach(x=>x.classList.toggle('on', x.dataset.src==='all'));
+  document.querySelectorAll('#verdictSeg button').forEach(x=>x.classList.toggle('on', x.dataset.v==='all'));
+  document.getElementById('searchInput').value = '';
+  render();
+  const first = body.querySelector('.crow'); if (first) first.classList.add('fresh');
+  document.querySelector('.board').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const t = document.createElement('div'); t.className = 'toast';
+  t.innerHTML = `<img class="coin-ico" src="${ico(7,'#2952e3','#4a72ff',info.symbol)}" alt="">
+    <div class="tx"><div class="tt">you launched on ${info.src}${addr?' · onchain':''}</div>
+    <div class="tn">$${info.symbol}<span class="badge clear">LIVE</span></div></div>`;
+  toasts.appendChild(t);
+  setTimeout(()=>{ t.classList.add('leave'); setTimeout(()=>t.remove(),300); }, 6500);
+
+  // give the launchpad a moment to index, then pull real dex + lens verdict
+  if (addr){
+    setTimeout(async ()=>{
+      try {
+        const dex = await fetchDex([addr]); const d = dex[addr];
+        if (d){ c.price=d.price; c.mcap=d.mcap; c.vol24=d.vol24; c.ch24=d.ch24; if(d.name)c.name=d.name; if(d.img)c.img=d.img; }
+        const v = await fetchVerdict(addr); if (v){ c.verdict=v.verdict; c.trust=v.trust; }
+        render(); refreshStats(); refreshTopVol();
+      } catch(e){}
+    }, 9000);
+  }
+}
+
+/* ---------- mobile bottom bar ---------- */
+document.getElementById('mbDeploy').addEventListener('click', openDeploy);
+document.getElementById('mbConnect').addEventListener('click', openWallet);
+document.getElementById('mbSearch').addEventListener('click', function(){
+  const s = document.getElementById('searchInput');
+  s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(()=>s.focus(), 350);
+});
+function bindTrade(){
+  document.querySelectorAll('[data-trade]').forEach(b=>{
+    b.addEventListener('click', ()=>openSwap(b.dataset.trade));
+  });
+}
+
+/* ---------- controls ---------- */
+function wireSeg(id, key, attr){
+  document.getElementById(id).addEventListener('click', e=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));
+    btn.classList.add('on');
+    state[key] = btn.dataset[attr];
+    render();
+  });
+}
+wireSeg('srcSeg','src','src');
+wireSeg('sortSeg','sort','sort');
+wireSeg('verdictSeg','verdict','v');
+document.getElementById('searchInput').addEventListener('input', function(){
+  state.q = this.value.trim(); render();
+});
+
+/* ---------- boot ---------- */
+buildTicker();
+refreshStats();
+refreshTopVol();
+render();
+setDataMode();
+setConnectedUI();
+
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (!reduce){
+  setInterval(()=>{ if (DEMO) tick(); }, 1500);
+  setInterval(()=>{ if (DEMO) newCoin(); }, 9000);
+  setTimeout(()=>{ if (DEMO) newCoin(); }, 4000);
+}
+
+// go live if data is reachable, otherwise the demo above keeps running
+loadLive().then(ok=>{
+  if (ok) setInterval(pollPrices, CONFIG.PRICE_REFRESH_MS);
+}).catch(()=>{});
+
+// reconnect silently if the wallet was already authorized
+(async function(){
+  try {
+    if (window.ethereum){
+      const a = await window.ethereum.request({ method: 'eth_accounts' });
+      if (a && a[0]){ account = a[0]; setConnectedUI(); }
+    }
+  } catch(e){}
+})();
+</script>
+
+<!-- Clanker on-chain deploy (no API key). loads only in the browser, signs with the connected wallet -->
+<script type="module">
+  window.__clankerDeploy = async function ({ name, symbol, image, description, tokenAdmin }) {
+    if (!window.ethereum) throw new Error('no browser wallet found');
+    const [{ createWalletClient, createPublicClient, custom, http }, { base }, mod] = await Promise.all([
+      import('https://esm.sh/viem@2'),
+      import('https://esm.sh/viem@2/chains'),
+      import('https://esm.sh/clanker-sdk/v4')
+    ]);
+    const Clanker = mod.Clanker || (mod.default && mod.default.Clanker) || mod.default;
+    const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const publicClient = createPublicClient({ chain: base, transport: http() });
+    const wallet = createWalletClient({ account, chain: base, transport: custom(window.ethereum) });
+    const clanker = new Clanker({ publicClient, wallet });
+    const res = await clanker.deploy({
+      name, symbol,
+      image: image || undefined,
+      metadata: description ? { description } : undefined,
+      tokenAdmin: tokenAdmin || account
+    });
+    if (res && res.error) throw res.error;
+    let address = res.address || res.tokenAddress || null;
+    if (res && typeof res.waitForTransaction === 'function') {
+      try { const done = await res.waitForTransaction(); address = (done && (done.address || done.tokenAddress)) || address; } catch (e) {}
+    }
+    return { address, txHash: res && res.txHash };
+  };
+</script>
+</body>
+</html>
