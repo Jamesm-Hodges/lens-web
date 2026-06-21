@@ -718,7 +718,7 @@
       <input id="tgCode" placeholder="paste your code here" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:12px 14px;color:var(--text);font-size:14px;font-family:'JetBrains Mono',ui-monospace,monospace;">
       <button id="tgConnect" style="background:var(--accent);color:#fff;border:none;border-radius:11px;padding:0 18px;font-weight:700;font-size:14px;cursor:pointer;flex:none;">Sign in</button>
     </div>
-    <div class="ss" style="margin-top:8px;font-size:12px;color:var(--text3);line-height:1.5">open the bot, tap Start, then paste the code it sends (or just tap the link in the bot)</div>
+    <div class="ss" style="margin-top:8px;font-size:12px;color:var(--text3);line-height:1.5">tap Open Telegram bot, press Start, and you are signed in here automatically. pasting the code is only a backup</div>
 
     <div class="sheet-terms" id="walletStatus">by signing in you agree to the <a href="/privacy">Terms</a> and <a href="/privacy">Privacy Policy</a></div>
   </div>
@@ -1516,8 +1516,8 @@ document.getElementById('bsToggle').addEventListener('click', function(e){
 const walletOverlay = document.getElementById('walletOverlay');
 const walletStatus = document.getElementById('walletStatus');
 const walletStatusDefault = walletStatus.innerHTML;
-function openWallet(){ if(!account) walletStatus.innerHTML = walletStatusDefault; walletOverlay.classList.add('open'); }
-function closeWallet(){ walletOverlay.classList.remove('open'); }
+function openWallet(){ if(!account) walletStatus.innerHTML = walletStatusDefault; walletOverlay.classList.add('open'); if(!tgUser) startTgFlow(); }
+function closeWallet(){ walletOverlay.classList.remove('open'); stopTgFlow(); }
 document.getElementById('connectBtnNav').addEventListener('click', onConnectClick);
 document.getElementById('walletClose').addEventListener('click', closeWallet);
 walletOverlay.addEventListener('click', e=>{ if(e.target===walletOverlay) closeWallet(); });
@@ -2009,7 +2009,51 @@ async function tgLogin(code, opts){
   }
 }
 
-// wire the modal
+/* ---------- seamless telegram sign-in (deep-link token, no copy-paste) ---------- */
+let tgNonce = null, tgPollTimer = null, tgPollTries = 0;
+
+function genNonce(){
+  try {
+    const a = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e){
+    return (Date.now().toString(16) + Math.random().toString(16).slice(2)).slice(0,32);
+  }
+}
+
+function startTgFlow(){
+  if (!CONFIG.TG_BOT || !CONFIG.TG_VERIFY_API) return;
+  stopTgFlow();
+  tgNonce = genNonce();
+  const open = document.getElementById('tgOpen');
+  if (open) open.href = 'https://t.me/' + CONFIG.TG_BOT + '?start=' + tgNonce;   // token rides the deep link
+  tgPollTries = 0;
+  tgPollTimer = setInterval(tgPollOnce, 2500);   // wait for the bot to bind this token when you press Start
+}
+
+function stopTgFlow(){ if (tgPollTimer){ clearInterval(tgPollTimer); tgPollTimer = null; } }
+
+async function tgPollOnce(){
+  if (!tgNonce){ stopTgFlow(); return; }
+  tgPollTries++;
+  if (tgPollTries > 80){ stopTgFlow(); return; }   // give up quietly after ~3.3 min
+  try {
+    const r = await fetch(CONFIG.TG_VERIFY_API + '?code=' + encodeURIComponent(tgNonce));
+    if (!r.ok) return;                              // Start not pressed yet, keep waiting silently
+    const d = await r.json().catch(()=>({}));
+    if (!d || !d.ok) return;
+    stopTgFlow();
+    const u = (d.telegram && d.telegram.username) || null;
+    try { localStorage.setItem('lens_tg', JSON.stringify({ token: d.token, username: u, id: d.telegram && d.telegram.id, exp: Date.now() + 24*60*60*1000 })); } catch(e){}
+    setTgUI(u);
+    loadWallet();
+    closeWallet();
+    tgToast(u);
+  } catch(e){ /* keep polling */ }
+}
+
+// wire the modal (manual paste still works as a fallback)
 (function(){
   const open = document.getElementById('tgOpen');
   if (open) open.href = CONFIG.TG_BOT ? ('https://t.me/' + CONFIG.TG_BOT) : '#';
