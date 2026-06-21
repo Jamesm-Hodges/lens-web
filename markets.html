@@ -1422,7 +1422,7 @@ async function buyToken(toAddr, amountEth, sym){
   if (!toAddr || !/^0x[a-fA-F0-9]{40}$/.test(toAddr)){ flashToast('not tradable yet', '$'+(sym||'token')+' has no address on file'); return; }
   flashToast('buying '+amountEth+' ETH', '$'+(sym||'token')+' · routing on Base');
   try {
-    const r = await fetch(`${CONFIG.WALLET_API}?action=buy&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}&to=${encodeURIComponent(toAddr)}&amount=${encodeURIComponent(amountEth)}`);
+    const r = await fetch(`${CONFIG.WALLET_API}?action=buy&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}&to=${encodeURIComponent(toAddr)}&amount=${encodeURIComponent(amountEth)}${wq()}`);
     const d = await r.json().catch(()=>({}));
     if (d && d.ok){
       flashToast('bought $'+(sym||'token'), d.transactionHash ? ('tx '+d.transactionHash.slice(0,12)+'…') : 'tx sent');
@@ -1450,7 +1450,7 @@ async function sellToken(fromAddr, percent, sym){
   percent = Math.min(Math.max(parseInt(percent||100,10)||100,1),100);
   flashToast('selling '+percent+'%', '$'+(sym||'token')+' \u00b7 routing on Base');
   try {
-    const r = await fetch(`${CONFIG.WALLET_API}?action=sell&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}&from=${encodeURIComponent(fromAddr)}&percent=${encodeURIComponent(percent)}`);
+    const r = await fetch(`${CONFIG.WALLET_API}?action=sell&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}&from=${encodeURIComponent(fromAddr)}&percent=${encodeURIComponent(percent)}${wq()}`);
     const d = await r.json().catch(()=>({}));
     if (d && d.ok){
       flashToast('sold $'+(sym||'token'), d.transactionHash ? ('tx '+d.transactionHash.slice(0,12)+'\u2026') : 'tx sent');
@@ -1632,6 +1632,10 @@ function openAccount(){
 
 let lensWallet = null;        // { address, balanceEth, network }
 let lensTokens = [];          // [{ address, symbol, amount, raw, decimals }]
+let lensWalletsList = [];     // [{ idx, address, network }]
+let activeWalletIdx = (()=>{ try { return parseInt(localStorage.getItem('lens_w')||'1',10)||1; } catch(e){ return 1; } })();
+function wq(){ return '&w='+activeWalletIdx; }
+const ETH_ICON = `<svg viewBox="0 0 256 417" width="19" height="19" fill="#fff" aria-hidden="true"><path d="M127.96 0l-2.8 9.5v267.4l2.8 2.8 127.96-75.6z" opacity=".55"/><path d="M127.96 0L0 203.6l127.96 75.6V154z"/><path d="M127.96 312.2l-1.6 1.9v95.3l1.6 4.6L256 235.9z" opacity=".55"/><path d="M127.96 416V312.2L0 235.9z"/><path d="M127.96 287.2l127.96-75.6-127.96-58.2z" opacity=".25"/><path d="M0 203.6l127.96 75.6V154z" opacity=".55"/></svg>`;
 const ETH_USD = 3400;         // rough display rate
 function tgSession(){ try { return JSON.parse(localStorage.getItem('lens_tg')||'null'); } catch(e){ return null; } }
 function symFor(addr){
@@ -1664,19 +1668,20 @@ async function loadWallet(){
   const s = tgSession();
   if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return null;
   try {
-    const r = await fetch(`${CONFIG.WALLET_API}?tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const r = await fetch(`${CONFIG.WALLET_API}?tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}${wq()}`);
     const d = await r.json().catch(()=>({}));
     if (d && d.ok){ lensWallet = { address: d.address, balanceEth: d.balanceEth||0, network: d.network }; updatePortfolioWallet(); }
   } catch(e){}
   loadTokens();
   loadPnl();
+  loadWalletsList();
   return lensWallet;
 }
 async function loadTokens(){
   const s = tgSession();
   if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return;
   try {
-    const r = await fetch(`${CONFIG.WALLET_API}?action=tokens&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const r = await fetch(`${CONFIG.WALLET_API}?action=tokens&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}${wq()}`);
     const d = await r.json().catch(()=>({}));
     if (d && d.ok && Array.isArray(d.tokens)){ lensTokens = d.tokens; updatePortfolioWallet(); }
   } catch(e){}
@@ -1685,7 +1690,7 @@ async function loadPnl(){
   const s = tgSession();
   if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return;
   try {
-    const r = await fetch(`${CONFIG.WALLET_API}?action=pnl&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const r = await fetch(`${CONFIG.WALLET_API}?action=pnl&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}${wq()}`);
     const d = await r.json().catch(()=>({}));
     if (d && d.ok){ lensPnl = { positions: d.positions||[], totals: d.totals||null }; updatePortfolioWallet(); }
   } catch(e){}
@@ -1700,8 +1705,8 @@ function updatePortfolioWallet(){
   if (!tgSession()){ w.innerHTML = '<div class="pf-empty" style="padding:14px 0">sign in to get your Base wallet</div>'; return; }
   if (!lensWallet){ w.innerHTML = '<div class="pf-empty" style="padding:14px 0">setting up your wallet\u2026<br>give it a sec</div>'; return; }
   let html = `<div class="tr-row" style="margin-bottom:10px">
-    <div class="tr-ava">\u039e</div>
-    <div class="tr-meta"><div class="l">my Base wallet</div><div class="a">${shortA(lensWallet.address)}</div></div>
+    <div class="tr-ava" style="background:#627EEA;padding:0">${ETH_ICON}</div>
+    <div class="tr-meta"><div class="l">wallet ${activeWalletIdx}</div><div class="a">${shortA(lensWallet.address)}</div></div>
     <div class="tr-acts"><button id="pfCopy">Copy</button><button id="pfScan">Scan</button></div>
   </div>`;
   // total PnL card (real, from executed trades)
@@ -1728,12 +1733,61 @@ function updatePortfolioWallet(){
       </div>`;
     }).join('');
   }
+  // wallet switcher (add new / switch, old wallets always kept)
+  html += '<div class="acct-sec" style="margin:14px 2px 9px">WALLETS</div>';
+  const wl = lensWalletsList && lensWalletsList.length ? lensWalletsList : [{ idx: activeWalletIdx, address: lensWallet.address }];
+  html += wl.map(x=>{
+    const on = x.idx === activeWalletIdx;
+    return `<div class="tr-row" style="margin-bottom:8px">
+      <div class="tr-ava" style="background:#627EEA;padding:0">${ETH_ICON}</div>
+      <div class="tr-meta"><div class="l">wallet ${x.idx}${on?' <span style="color:var(--green);font-size:11px">\u2713 active</span>':''}</div><div class="a">${shortA(x.address)}</div></div>
+      <div class="tr-acts">${on?'':`<button data-switch="${x.idx}">Switch</button>`}</div>
+    </div>`;
+  }).join('');
+  html += `<button class="acct-row" id="pfAddWallet" style="margin:2px 0 0;justify-content:center">+ Add new wallet</button>`;
   html += `<button class="acct-row danger" id="pfExport" style="margin:14px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Export private key<span></span></button>`;
   w.innerHTML = html;
   w.querySelector('#pfCopy').addEventListener('click', ()=>{ if(navigator.clipboard) navigator.clipboard.writeText(lensWallet.address); flashToast('copied', shortA(lensWallet.address)); });
   w.querySelector('#pfScan').addEventListener('click', ()=> window.open('https://basescan.org/address/'+lensWallet.address,'_blank'));
   w.querySelector('#pfExport').addEventListener('click', exportKey);
+  w.querySelector('#pfAddWallet').addEventListener('click', addWallet);
+  w.querySelectorAll('[data-switch]').forEach(b=> b.addEventListener('click', ()=> switchWallet(parseInt(b.dataset.switch,10))));
   w.querySelectorAll('[data-sell]').forEach(b=> b.addEventListener('click', ()=> sellToken(b.dataset.sell, 100, b.dataset.sym)));
+}
+async function loadWalletsList(){
+  const s = tgSession();
+  if (!s || !s.token || !s.id || !CONFIG.WALLET_API) return;
+  try {
+    const r = await fetch(`${CONFIG.WALLET_API}?action=wallets&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.ok && Array.isArray(d.wallets)){ lensWalletsList = d.wallets; updatePortfolioWallet(); }
+  } catch(e){}
+}
+function switchWallet(idx){
+  if (!idx || idx === activeWalletIdx) return;
+  activeWalletIdx = idx;
+  try { localStorage.setItem('lens_w', String(idx)); } catch(e){}
+  lensWallet = null; lensTokens = []; lensPnl = null;
+  flashToast('switched', 'wallet '+idx);
+  loadWallet();
+}
+async function addWallet(){
+  const s = tgSession(); if (!s || !s.token){ openWallet(); return; }
+  flashToast('creating wallet\u2026','hold on');
+  try {
+    const r = await fetch(`${CONFIG.WALLET_API}?action=newwallet&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.ok && d.idx){
+      flashToast('new wallet ready', 'wallet '+d.idx);
+      activeWalletIdx = d.idx;
+      try { localStorage.setItem('lens_w', String(d.idx)); } catch(e){}
+      lensWallet = null; lensTokens = []; lensPnl = null;
+      await loadWalletsList();
+      loadWallet();
+    } else {
+      flashToast('add failed', d.error || 'run the wallet migration first');
+    }
+  } catch(e){ flashToast('add failed','network error'); }
 }
 function exportKey(){
   let ov = document.getElementById('exConfirm');
@@ -1757,10 +1811,12 @@ async function doExport(){
   const s = tgSession(); if (!s) return;
   flashToast('exporting\u2026','hold on');
   try {
-    const r = await fetch(`${CONFIG.WALLET_API}?action=export&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}`);
+    const r = await fetch(`${CONFIG.WALLET_API}?action=export&tg_id=${encodeURIComponent(s.id)}&token=${encodeURIComponent(s.token)}${wq()}`);
     const d = await r.json().catch(()=>({}));
-    if (d && d.ok && d.privateKey){ showExportSheet(d.privateKey); }
-    else { flashToast('export failed', d.error || 'try again'); }
+    let pk = d && d.privateKey;
+    if (pk && typeof pk === 'object') pk = pk.privateKey || pk.private_key || pk.key || '';
+    if (d && d.ok && pk){ showExportSheet(String(pk)); }
+    else { flashToast('export failed', (d && d.error) || 'try again'); }
   } catch(e){ flashToast('export failed','network error'); }
 }
 function showExportSheet(pk){
@@ -1770,7 +1826,7 @@ function showExportSheet(pk){
     ov.innerHTML = `<div class="sheet">
       <div class="sheet-head"><span style="font-weight:800;font-size:18px">Private key</span><button class="sheet-x" id="exClose">\u2715</button></div>
       <div class="swap-verdict stop" style="margin-bottom:14px">never share this. anyone with this key owns your wallet and funds. store it offline, never paste it into any site or bot</div>
-      <div class="rf-link" id="exKey" style="user-select:all"></div>
+      <div class="rf-link" id="exKey" style="user-select:all;word-break:break-all;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.5"></div>
       <button class="rf-copy" id="exCopy">Copy private key</button>
     </div>`;
     document.body.appendChild(ov);
