@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install the LENS extension · on-chain intel on every X profile</title>
+<meta name="description" content="Install the LENS browser extension manually while it is in review on the Chrome Web Store. Step by step guide for Chrome, Edge and Brave.">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7' fill='%232952e3'/%3E%3Cpath d='M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z' fill='none' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='14' r='3.2' fill='none' stroke='white' stroke-width='1.8'/%3E%3Ccircle cx='14' cy='14' r='1.1' fill='white'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #161616;
+    --border: #1f1f1f;
+    --border2: #2a2a2a;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #2952e3;
+    --accent2: #1a3acc;
+    --accent-light: #4a72ff;
+    --green: #2ecc71;
+    --amber: #e0843a;
+    --red: #ff5a5a;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: rgba(41,82,227,.35); }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 18px;
+    padding: 16px 24px;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo svg { width: 28px; height: 28px; }
+  .nav-logo-text { font-weight: 800; letter-spacing: .5px; font-size: 17px; }
+  .nav-links { display: flex; gap: 22px; margin-left: 14px; }
+  .nav-links a { color: var(--text2); font-size: 14px; font-weight: 500; transition: color .15s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .nav-right { margin-left: auto; }
+  .nav-cta {
+    background: var(--accent); color: #fff; border: 1px solid rgba(120,150,255,.34);
+    padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 22px -12px rgba(41,82,227,.7);
+    transition: transform .15s, filter .15s;
+  }
+  .nav-cta:hover { transform: translateY(-1px); filter: brightness(1.05); }
+
+  /* HERO */
+  .hero { padding: 74px 0 40px; position: relative; }
+  .hero::before {
+    content: ''; position: absolute; inset: -120px 0 auto 0; height: 420px; z-index: -1;
+    background:
+      radial-gradient(540px 260px at 18% 0%, rgba(41,82,227,.20), transparent 70%),
+      radial-gradient(460px 240px at 90% 10%, rgba(255,106,46,.06), transparent 70%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 2px;
+    color: var(--text2); margin-bottom: 18px;
+  }
+  .eyebrow b { color: var(--accent-light); }
+  .hero h1 {
+    font-size: clamp(34px, 6vw, 56px); font-weight: 800; line-height: 1.04;
+    letter-spacing: -1.5px;
+  }
+  .hero h1 .accent {
+    background: linear-gradient(90deg, var(--accent-light), var(--accent));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p.sub {
+    color: var(--text2); font-size: clamp(15px, 2.4vw, 18px); max-width: 600px;
+    margin-top: 20px; line-height: 1.55;
+  }
+
+  .dl-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; align-items: center; }
+  .btn-dl {
+    display: inline-flex; align-items: center; gap: 11px;
+    background: linear-gradient(180deg, #3a63ec, var(--accent) 58%, var(--accent2));
+    color: #fff; border: 1px solid rgba(120,150,255,.34);
+    padding: 15px 24px; border-radius: 13px; font-size: 15.5px; font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 12px 30px -12px rgba(41,82,227,.7);
+    transition: transform .18s, filter .18s, box-shadow .18s; position: relative; overflow: hidden;
+  }
+  .btn-dl svg { width: 19px; height: 19px; }
+  .btn-dl:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 18px 36px -14px rgba(41,82,227,.78); }
+  .btn-dl::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: -130%; width: 55%;
+    background: linear-gradient(105deg, transparent, rgba(255,255,255,.22), transparent);
+    transform: skewX(-18deg); transition: left .6s cubic-bezier(.22,.61,.36,1);
+  }
+  .btn-dl:hover::after { left: 150%; }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--bg2); border: 1px solid var(--border2); color: var(--text2);
+    padding: 14px 20px; border-radius: 13px; font-size: 14.5px; font-weight: 600;
+    transition: color .15s, border-color .15s;
+  }
+  .btn-ghost svg { width: 17px; height: 17px; }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
+  .dl-meta { font-family: var(--mono); font-size: 12.5px; color: var(--text3); margin-top: 14px; }
+  .dl-meta b { color: var(--text2); font-weight: 500; }
+
+  /* REVIEW BANNER */
+  .banner {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: linear-gradient(180deg, rgba(41,82,227,.10), rgba(41,82,227,.04));
+    border: 1px solid rgba(41,82,227,.28); border-radius: 16px;
+    padding: 18px 20px; margin: 36px 0 0;
+  }
+  .banner .ico {
+    flex: none; width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(41,82,227,.16); border: 1px solid rgba(74,114,255,.3);
+    display: flex; align-items: center; justify-content: center; color: var(--accent-light);
+  }
+  .banner .ico svg { width: 19px; height: 19px; }
+  .banner h3 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .banner p { color: var(--text2); font-size: 13.5px; line-height: 1.5; }
+
+  /* STEPS */
+  .steps { padding: 60px 0 20px; }
+  .sec-head { margin-bottom: 8px; }
+  .sec-head .eyebrow { margin-bottom: 12px; }
+  .sec-head h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -1px; }
+  .sec-head p { color: var(--text2); margin-top: 10px; max-width: 560px; }
+
+  .step {
+    display: grid; grid-template-columns: 52px 1fr 1fr; gap: 26px; align-items: center;
+    padding: 38px 0; border-top: 1px solid var(--border);
+  }
+  .step:first-of-type { border-top: none; }
+  .step-num {
+    font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--accent-light);
+    width: 40px; height: 40px; border-radius: 11px;
+    background: rgba(41,82,227,.10); border: 1px solid rgba(41,82,227,.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-body h3 { font-size: 20px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 9px; }
+  .step-body p { color: var(--text2); font-size: 15px; line-height: 1.55; }
+  .step-body code {
+    font-family: var(--mono); font-size: 13px; color: var(--accent-light);
+    background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+    padding: 2px 7px; white-space: nowrap;
+  }
+  .shot { border-radius: 14px; overflow: hidden; border: 1px solid var(--border2); background: var(--bg2); }
+  .shot svg { display: block; width: 100%; height: auto; }
+
+  /* GOOD TO KNOW */
+  .gtk { padding: 30px 0 70px; }
+  .gtk-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 26px; }
+  .gtk-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .gtk-card .k { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14.5px; margin-bottom: 7px; }
+  .gtk-card .k svg { width: 17px; height: 17px; color: var(--accent-light); flex: none; }
+  .gtk-card p { color: var(--text2); font-size: 13.5px; line-height: 1.5; }
+
+  /* CTA STRIP */
+  .end {
+    text-align: center; padding: 56px 28px; margin: 10px 0 70px;
+    background: radial-gradient(700px 200px at 50% 0%, rgba(41,82,227,.12), transparent 70%), var(--bg2);
+    border: 1px solid var(--border); border-radius: 22px;
+  }
+  .end h2 { font-size: clamp(22px, 4vw, 30px); font-weight: 800; letter-spacing: -.6px; }
+  .end p { color: var(--text2); margin: 12px auto 26px; max-width: 460px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px 24px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 16px 26px;
+    max-width: 1080px; margin: 0 auto;
+  }
+  .footer-brand { font-weight: 800; letter-spacing: .5px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+  .footer-links a { color: var(--text2); font-size: 13.5px; transition: color .15s; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { margin-left: auto; color: var(--text3); font-size: 12.5px; font-family: var(--mono); }
+
+  @media (max-width: 760px) {
+    .nav-links { display: none; }
+    .step { grid-template-columns: 40px 1fr; gap: 16px 14px; }
+    .step .shot { grid-column: 1 / -1; margin-top: 4px; }
+    .gtk-grid { grid-template-columns: 1fr; }
+    .footer-copy { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <svg viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="7" fill="#2952e3"/>
+      <path d="M5 14C5 14 8.5 9 14 9C19.5 9 23 14 23 14C23 14 19.5 19 14 19C8.5 19 5 14 5 14Z" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="14" cy="14" r="3.2" fill="none" stroke="white" stroke-width="1.8"/>
+      <circle cx="14" cy="14" r="1.1" fill="white"/>
+    </svg>
+    <span class="nav-logo-text">LENS</span>
+  </a>
+  <div class="nav-links">
+    <a href="/markets">Markets</a>
+    <a href="/developers">API</a>
+    <a href="/staking">Staking</a>
+    <a href="/lens-docs">Docs</a>
+  </div>
+  <div class="nav-right">
+    <a class="nav-cta" href="#download">Download</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><b>LENS</b> // BROWSER EXTENSION</div>
+    <h1>install the<br><span class="accent">LENS extension</span></h1>
+    <p class="sub">on-chain intelligence on every X profile, the deployer behind any token, smart followers, verdicts, all injected right where you scroll</p>
+
+    <div class="dl-row" id="download">
+      <a class="btn-dl" href="/lens-extension.zip" download="lens-extension.zip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>
+        Download for Chrome
+      </a>
+    </div>
+    <div class="dl-meta">works on <b>Chrome, Edge and Brave</b> · desktop only · free · no sign in</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- REVIEW BANNER -->
+  <div class="banner">
+    <div class="ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <div>
+      <h3>LENS is in review on the Chrome Web Store</h3>
+      <p>until it is approved this is the official way to install. one click install lands right here the moment it goes live, the steps below take under a minute</p>
+    </div>
+  </div>
+</div>
+
+<!-- STEPS -->
+<section class="steps">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">FIVE STEPS</div>
+      <h2>load it in under a minute</h2>
+      <p>this is the standard way browsers let you run an extension straight from a folder, the same flow developers use every day</p>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h3>download and unzip</h3>
+        <p>grab the ZIP above, then unzip it. keep the folder somewhere safe, the extension runs straight from it so do not delete it later</p>
+      </div>
+      <div class="shot">
+        <svg viewBox="0 0 400 230" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="230" fill="#0f1116"/>
+          <!-- zip file -->
+          <g transform="translate(58,70)">
+            <rect x="0" y="0" width="86" height="100" rx="9" fill="#1b1f29" stroke="#2c3342" stroke-width="1.5"/>
+            <rect x="36" y="-2" width="14" height="58" rx="3" fill="#2952e3" opacity=".55"/>
+            <rect x="38" y="6" width="10" height="8" fill="#0f1116"/>
+            <rect x="38" y="22" width="10" height="8" fill="#0f1116"/>
+            <rect x="38" y="38" width="10" height="8" fill="#0f1116"/>
+            <text x="43" y="86" text-anchor="middle" fill="#9fb0ff" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">ZIP</text>
+          </g>
+          <!-- arrow -->
+          <g stroke="#4a72ff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M170 120 H236"/>
+            <path d="M226 110 L238 120 L226 130"/>
+          </g>
+          <!-- folder -->
+          <g transform="translate(262,72)">
+            <path d="M4 14 H34 L42 24 H92 a8 8 0 0 1 8 8 V92 a8 8 0 0 1 -8 8 H12 a8 8 0 0 1 -8 -8 V22 a8 8 0 0 1 8 -8 Z" fill="#161a22" stroke="#2c3342" stroke-width="1.5"/>
+            <path d="M4 30 H100 V92 a8 8 0 0 1 -8 8 H12 a8 8 0 0 1 -8 -8 Z" fill="#1d2330" stroke="#2c3342" stroke-width="1.5"/>
+            <rect x="22" y="46" width="56" height="6" rx="3" fill="#2c3342"/>
+            <rect x="22" y="58" width="40" height="6" rx="3" fill="#2c3342"/>
+            <circle cx="86" cy="86" r="13" fill="#2ecc71"/>
+            <path d="M80 86 l4 4 8 -9" stroke="#06210f" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+          <text x="101" y="200" text-anchor="middle" fill="#5a6376" font-family="JetBrains Mono, monospace" font-size="11">lens-extension.zip</text>
+          <text x="312" y="200" text-anchor="middle" fill="#5a6376" font-family="JetBrains Mono, monospace" font-size="11">extracted folder</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h3>open the extensions page</h3>
+        <p>in your browser type <code>chrome://extensions</code> in the address bar and press enter. or open the menu, then Extensions, then Manage extensions</p>
+      </div>
+      <div class="shot">
+        <svg viewBox="0 0 400 230" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="230" fill="#f6f7f9"/>
+          <!-- browser top -->
+          <rect x="0" y="0" width="400" height="44" fill="#e9ebee"/>
+          <circle cx="20" cy="22" r="5" fill="#ff5f57"/><circle cx="38" cy="22" r="5" fill="#febc2e"/><circle cx="56" cy="22" r="5" fill="#28c840"/>
+          <!-- address bar highlighted -->
+          <rect x="80" y="11" width="300" height="22" rx="11" fill="#fff" stroke="#2952e3" stroke-width="2"/>
+          <text x="94" y="26" fill="#222" font-family="JetBrains Mono, monospace" font-size="12">chrome://extensions</text>
+          <rect x="289" y="14" width="1.5" height="16" fill="#2952e3"><animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/></rect>
+          <!-- page body -->
+          <text x="24" y="86" fill="#202124" font-family="Inter, sans-serif" font-size="18" font-weight="700">Extensions</text>
+          <rect x="24" y="104" width="352" height="46" rx="9" fill="#fff" stroke="#e2e4e8"/>
+          <rect x="40" y="118" width="18" height="18" rx="5" fill="#dfe3ea"/>
+          <rect x="70" y="120" width="120" height="7" rx="3.5" fill="#d3d7df"/>
+          <rect x="70" y="133" width="80" height="6" rx="3" fill="#e4e7ec"/>
+          <rect x="24" y="158" width="352" height="46" rx="9" fill="#fff" stroke="#e2e4e8"/>
+          <rect x="40" y="172" width="18" height="18" rx="5" fill="#dfe3ea"/>
+          <rect x="70" y="174" width="100" height="7" rx="3.5" fill="#d3d7df"/>
+          <rect x="70" y="187" width="64" height="6" rx="3" fill="#e4e7ec"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h3>turn on Developer mode</h3>
+        <p>flip the <code>Developer mode</code> switch in the top right corner of the extensions page. this is what lets a browser run an extension from a folder</p>
+      </div>
+      <div class="shot">
+        <svg viewBox="0 0 400 230" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="230" fill="#f6f7f9"/>
+          <rect x="0" y="0" width="400" height="44" fill="#e9ebee"/>
+          <circle cx="20" cy="22" r="5" fill="#ff5f57"/><circle cx="38" cy="22" r="5" fill="#febc2e"/><circle cx="56" cy="22" r="5" fill="#28c840"/>
+          <rect x="80" y="11" width="300" height="22" rx="11" fill="#fff" stroke="#dfe1e5"/>
+          <text x="94" y="26" fill="#5f6368" font-family="JetBrains Mono, monospace" font-size="12">chrome://extensions</text>
+          <!-- header row -->
+          <text x="24" y="82" fill="#202124" font-family="Inter, sans-serif" font-size="17" font-weight="700">Extensions</text>
+          <text x="232" y="81" fill="#202124" font-family="Inter, sans-serif" font-size="13" font-weight="600">Developer mode</text>
+          <!-- toggle ON, highlighted -->
+          <g>
+            <rect x="330" y="68" width="44" height="22" rx="11" fill="#2952e3"/>
+            <circle cx="363" cy="79" r="8" fill="#fff"/>
+            <rect x="320" y="60" width="64" height="38" rx="12" fill="none" stroke="#2952e3" stroke-width="2.4">
+              <animate attributeName="opacity" values=".35;1;.35" dur="1.6s" repeatCount="indefinite"/>
+            </rect>
+          </g>
+          <!-- pointer -->
+          <path d="M300 120 L348 96" stroke="#2952e3" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path d="M344 92 L351 95 L347 102" stroke="#2952e3" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="296" y="134" text-anchor="end" fill="#2952e3" font-family="Inter, sans-serif" font-size="12.5" font-weight="700">turn this on</text>
+          <line x1="24" y1="104" x2="376" y2="104" stroke="#e4e6ea" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h3>click Load unpacked</h3>
+        <p>three buttons appear. click <code>Load unpacked</code>, then pick the folder you unzipped, the one that has <code>manifest.json</code> inside</p>
+      </div>
+      <div class="shot">
+        <svg viewBox="0 0 400 230" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="230" fill="#f6f7f9"/>
+          <rect x="0" y="0" width="400" height="44" fill="#e9ebee"/>
+          <circle cx="20" cy="22" r="5" fill="#ff5f57"/><circle cx="38" cy="22" r="5" fill="#febc2e"/><circle cx="56" cy="22" r="5" fill="#28c840"/>
+          <rect x="80" y="11" width="300" height="22" rx="11" fill="#fff" stroke="#dfe1e5"/>
+          <text x="94" y="26" fill="#5f6368" font-family="JetBrains Mono, monospace" font-size="12">chrome://extensions</text>
+          <!-- buttons row -->
+          <g font-family="Inter, sans-serif" font-size="12.5" font-weight="600">
+            <rect x="24" y="68" width="118" height="34" rx="8" fill="#fff" stroke="#2952e3" stroke-width="2.2"/>
+            <path d="M44 85 h-7 m3.5 -3.5 v7" stroke="#2952e3" stroke-width="2" stroke-linecap="round"/>
+            <text x="58" y="89" fill="#1a3acc">Load unpacked</text>
+            <rect x="150" y="68" width="108" height="34" rx="8" fill="#fff" stroke="#dadce0"/>
+            <text x="166" y="89" fill="#9aa0a6">Pack extension</text>
+            <rect x="266" y="68" width="80" height="34" rx="8" fill="#fff" stroke="#dadce0"/>
+            <text x="282" y="89" fill="#9aa0a6">Update</text>
+          </g>
+          <rect x="14" y="60" width="138" height="50" rx="11" fill="none" stroke="#2952e3" stroke-width="2.2" opacity=".0"/>
+          <!-- file picker hint -->
+          <g transform="translate(108,128)">
+            <rect x="0" y="0" width="184" height="74" rx="11" fill="#fff" stroke="#e2e4e8"/>
+            <rect x="0" y="0" width="184" height="26" rx="11" fill="#f1f3f4"/>
+            <rect x="0" y="14" width="184" height="12" fill="#f1f3f4"/>
+            <text x="14" y="18" fill="#5f6368" font-family="Inter, sans-serif" font-size="11" font-weight="600">Select folder</text>
+            <path d="M16 44 h12 l3 4 h16 a5 5 0 0 1 5 5 v9 a5 5 0 0 1 -5 5 H16 a5 5 0 0 1 -5 -5 V49 a5 5 0 0 1 5 -5 Z" fill="#9fb0ff"/>
+            <text x="60" y="58" fill="#3c4043" font-family="JetBrains Mono, monospace" font-size="11">lens-extension</text>
+            <rect x="120" y="50" width="50" height="16" rx="8" fill="#2952e3"/>
+            <text x="145" y="62" text-anchor="middle" fill="#fff" font-family="Inter, sans-serif" font-size="10" font-weight="700">Select</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-body">
+        <h3>pin LENS and go</h3>
+        <p>LENS shows up in your list. click the puzzle icon in the toolbar and pin it so it is one click away. open any X profile and the panels load on their own</p>
+      </div>
+      <div class="shot">
+        <svg viewBox="0 0 400 230" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="230" fill="#f6f7f9"/>
+          <rect x="0" y="0" width="400" height="44" fill="#e9ebee"/>
+          <circle cx="20" cy="22" r="5" fill="#ff5f57"/><circle cx="38" cy="22" r="5" fill="#febc2e"/><circle cx="56" cy="22" r="5" fill="#28c840"/>
+          <rect x="80" y="11" width="240" height="22" rx="11" fill="#fff" stroke="#dfe1e5"/>
+          <text x="94" y="26" fill="#5f6368" font-family="JetBrains Mono, monospace" font-size="11.5">x.com/somedev</text>
+          <!-- puzzle icon -->
+          <rect x="332" y="11" width="22" height="22" rx="6" fill="#fff" stroke="#dadce0"/>
+          <path d="M343 16 a2 2 0 1 1 .1 0 m-4 2 v3 h-2 a1.6 1.6 0 0 0 0 3.2 h2 v3 h8 v-3 h2 a1.6 1.6 0 0 0 0 -3.2 h-2 v-3 Z" fill="none" stroke="#5f6368" stroke-width="1.4"/>
+          <!-- dropdown -->
+          <g transform="translate(214,52)">
+            <rect x="0" y="0" width="172" height="92" rx="12" fill="#fff" stroke="#e2e4e8"/>
+            <text x="16" y="24" fill="#5f6368" font-family="Inter, sans-serif" font-size="11" font-weight="600">Extensions</text>
+            <!-- LENS row highlighted -->
+            <rect x="8" y="34" width="156" height="34" rx="8" fill="#eef2ff" stroke="#2952e3" stroke-width="1.6"/>
+            <rect x="16" y="42" width="18" height="18" rx="5" fill="#2952e3"/>
+            <path d="M20 51 C20 51 22.5 48 25 48 C27.5 48 30 51 30 51 C30 51 27.5 54 25 54 C22.5 54 20 51 20 51Z" fill="none" stroke="#fff" stroke-width="1" stroke-linejoin="round"/>
+            <circle cx="25" cy="51" r="1.6" fill="none" stroke="#fff" stroke-width="1"/>
+            <text x="42" y="56" fill="#202124" font-family="Inter, sans-serif" font-size="12.5" font-weight="700">LENS</text>
+            <!-- pin -->
+            <path d="M150 45 l5 5 -2 2 -1.5 -1.5 -3 3 v3 l-2 -2 -2 2 v-3 l3 -3 -1.5 -1.5 2 -2 Z" fill="#2952e3"/>
+          </g>
+          <!-- injected panel preview -->
+          <g transform="translate(24,158)">
+            <rect x="0" y="0" width="352" height="54" rx="10" fill="#0f1116"/>
+            <rect x="12" y="12" width="30" height="30" rx="8" fill="#1b2030"/>
+            <path d="M18 27 C18 27 23 21 27 21 C31 21 36 27 36 27 C36 27 31 33 27 33 C23 33 18 27 18 27Z" fill="none" stroke="#4a72ff" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="27" cy="27" r="3" fill="none" stroke="#4a72ff" stroke-width="1.5"/>
+            <text x="54" y="24" fill="#f0f0f0" font-family="Inter, sans-serif" font-size="12" font-weight="700">LENS verdict</text>
+            <text x="54" y="38" fill="#888" font-family="JetBrains Mono, monospace" font-size="10">deployer read · funded wallet traced</text>
+            <rect x="256" y="15" width="84" height="24" rx="7" fill="rgba(46,204,113,.14)" stroke="rgba(46,204,113,.4)"/>
+            <circle cx="272" cy="27" r="3.5" fill="#2ecc71"/>
+            <text x="282" y="31" fill="#2ecc71" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">CLEAR</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GOOD TO KNOW -->
+<section class="gtk">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">GOOD TO KNOW</div>
+      <h2>a few things up front</h2>
+    </div>
+    <div class="gtk-grid">
+      <div class="gtk-card">
+        <div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>desktop only</div>
+        <p>load unpacked runs on desktop Chrome, Edge and Brave. mobile browsers cannot side load extensions yet</p>
+      </div>
+      <div class="gtk-card">
+        <div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6l2 3h8v13H4z"/></svg>keep the folder</div>
+        <p>the extension runs from the folder you unzipped. if you move or delete it, LENS stops working, just load it again from the new spot</p>
+      </div>
+      <div class="gtk-card">
+        <div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>updates for now are manual</div>
+        <p>while we are in review, grab a fresh ZIP when we ship an update and load it again. auto updates arrive with the Web Store version</p>
+      </div>
+      <div class="gtk-card">
+        <div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>no sign in, no wallet</div>
+        <p>nothing to connect and no account to make. install it and it reads on chain data straight away on any X profile</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- END CTA -->
+<div class="wrap">
+  <div class="end">
+    <h2>ready when you are</h2>
+    <p>grab the ZIP, run the five steps, and the deployer behind every token shows up where you scroll</p>
+    <a class="btn-dl" href="/lens-extension.zip" download="lens-extension.zip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>
+      Download for Chrome
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">LENS</div>
+  <div class="footer-links">
+    <a href="/markets">Markets</a>
+    <a href="/developers">API</a>
+    <a href="/staking">Staking</a>
+    <a href="/mcp">Agents</a>
+    <a href="/lens-docs">Docs</a>
+    <a href="/community">Community</a>
+    <a href="https://x.com/lnsx_io" target="_blank" rel="noopener">Twitter</a>
+  </div>
+  <div class="footer-copy">2026 LENS · bios lie, chains don't</div>
+</footer>
+
+</body>
+</html>
